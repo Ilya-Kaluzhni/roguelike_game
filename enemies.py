@@ -27,7 +27,8 @@ DETECTION_RANGE = {
 # сила,
 # враждебность;
 class Enemy:
-    def __init__(self, type_, health, dexterity, strength, hostility, direction=None, moving_pattern=None, view=None, x=0,
+    def __init__(self, type_, health, dexterity, strength, hostility, direction=None, moving_pattern=None, view=None,
+                 x=0,
                  y=0):
         self.type = type_
         self.current_health = health
@@ -42,11 +43,11 @@ class Enemy:
 
     @staticmethod
     def change_cords(current_cords, direction):
-        x, y = current_cords['x'],current_cords['y']
+        x, y = current_cords['x'], current_cords['y']
 
-        if direction == 'FORWARD':
+        if direction == 'UP':
             y -= 1
-        elif direction == 'BACK':
+        elif direction == 'DOWN':
             y += 1
         elif direction == 'LEFT':
             x -= 1
@@ -106,7 +107,7 @@ class Enemy:
             self.chase_character = False
 
     def get_cords(self):
-        return self.cords['x'],self.cords['y']
+        return self.cords['x'], self.cords['y']
 
 
 class Zombie(Enemy):
@@ -183,7 +184,7 @@ class Ghost(Enemy):
             direction_x = randint(0, room_cords)  # Рандомное число из ширины комнаты
             direction_y = randint(0, room_cords)  # Рандомное число из высоты комнаты
             # if Если не выходит за границу и ячейка свободна:
-            self.cords = (direction_x, direction_y)
+            self.cords['x'], self.cords['x'] = direction_x, direction_y
             break
 
 
@@ -206,9 +207,10 @@ class Ogre(Enemy):
     def move_pattern(self):
         for _ in range(MAX_TRIES):
             direction = choice(['UP', 'LEFT', 'RIGHT', 'DOWN'])
-            first_step = super().change_cords(self.cords, direction)
+            first_step = {'x': (super().change_cords(self.cords, direction))[0],
+                          'y': (super().change_cords(self.cords, direction))[1]}
             # if Если не выходит за границу и ячейка свободна еще раз проверить следующую:
-            new_cords = super().change_cords(self.cords, direction)
+            new_cords = super().change_cords(first_step, direction)
             # if Если не выходит за границу и ячейка свободна
             self.cords['x'], self.cords['y'] = new_cords
             break
@@ -240,7 +242,7 @@ class Snake(Enemy):
                 # if Если не выходит за границу и ячейка свободна
                 self.direction = direction
                 self.cords['x'], self.cords['y'] = new_cords
-                with open('d.log','a') as f:
+                with open('d.log', 'a') as f:
                     f.write(str(new_cords) + '\n')
                 break
         # if Если не выходит за границу и ячейка свободна
@@ -330,6 +332,5 @@ class Fight:
                 self.monster.health * self.loot_hp_factor +
                 self.monster.strength * self.loot_strength_factor +
                 randint(0, 19))
-
 
 
