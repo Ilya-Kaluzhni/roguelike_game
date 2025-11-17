@@ -5,10 +5,10 @@ DIRECTIONS = [
     'LEFT',
     'RIGHT',
     'BACK',
-    'DIAGONALLY_FORWARD_LEFT',
-    'DIAGONALLY_FORWARD_RIGHT',
-    'DIAGONALLY_BACK_LEFT',
-    'DIAGONALLY_BACK_RIGHT',
+    'DIAGONALLY_UP_LEFT',
+    'DIAGONALLY_UP_RIGHT',
+    'DIAGONALLY_DOWN_LEFT',
+    'DIAGONALLY_DOWN_RIGHT',
     'STOP'
 ]
 
@@ -27,7 +27,8 @@ DETECTION_RANGE = {
 # сила,
 # враждебность;
 class Enemy:
-    def __init__(self, type_, health, dexterity, strength, hostility, direction=None, moving_pattern=None, view=None):
+    def __init__(self, type_, health, dexterity, strength, hostility, direction=None, moving_pattern=None, view=None, x=0,
+                 y=0):
         self.type = type_
         self.current_health = health
         self.dexterity = dexterity
@@ -36,12 +37,12 @@ class Enemy:
         self.hostility = hostility
         self.moving_pattern = moving_pattern
         self.view = view or {}
-        self.cords = {'x': 0, 'y': 0}
+        self.cords = {'x': x, 'y': y}
         self.chase_character = False
 
     @staticmethod
     def change_cords(current_cords, direction):
-        x, y = current_cords
+        x, y = current_cords['x'],current_cords['y']
 
         if direction == 'FORWARD':
             y -= 1
@@ -104,9 +105,12 @@ class Enemy:
         else:
             self.chase_character = False
 
+    def get_cords(self):
+        return self.cords['x'],self.cords['y']
+
 
 class Zombie(Enemy):
-    def __init__(self):
+    def __init__(self, cord_x, cord_y):
         super().__init__(
             type_='zombie',
             health=150,  # высокое здоровье
@@ -114,7 +118,9 @@ class Zombie(Enemy):
             strength=125,  # средняя сила
             hostility='AVERAGE',  # средняя враждебность
             moving_pattern=None,
-            view={'letter': 'Z', 'color': 'green'}
+            view={'letter': 'Z', 'color': 'green'},
+            x=cord_x,
+            y=cord_y
         )
 
     # Мб добавить доп ограничение попыток движения.
@@ -124,12 +130,14 @@ class Zombie(Enemy):
             direction = choice(['UP', 'LEFT', 'RIGHT', 'DOWN'])
             new_cords = super().change_cords(self.cords, direction)
             # if Если не выходит за границу и ячейка свободна:
-            self.cords = new_cords
+            self.cords['x'], self.cords['y'] = new_cords
+            with open('d.log', 'a') as f:
+                f.write(str(new_cords))
             break
 
 
 class Vampire(Enemy):
-    def __init__(self):
+    def __init__(self, cord_x, cord_y):
         super().__init__(
             type_='vampire',
             health=150,  # высокая здоровье
@@ -137,7 +145,9 @@ class Vampire(Enemy):
             strength=75,  # средняя сила
             hostility='HIGH',  # высокая враждебность
             moving_pattern=None,
-            view={'letter': 'V', 'color': 'red'}
+            view={'letter': 'V', 'color': 'red'},
+            x=cord_x,
+            y=cord_y
         )
         self.vampire_first_attack = True  # Первый удар по вампиру — промах
 
@@ -147,13 +157,12 @@ class Vampire(Enemy):
             direction = choice(DIRECTIONS)
             new_cords = super().change_cords(self.cords, direction)
             # if Если не выходит за границу и ячейка свободна:
-            self.cords = new_cords
+            self.cords['x'], self.cords['y'] = new_cords
             break
 
 
-
 class Ghost(Enemy):
-    def __init__(self):
+    def __init__(self, cord_x, cord_y):
         super().__init__(
             type_='ghost',
             health=25,  # низкое здоровье
@@ -161,13 +170,15 @@ class Ghost(Enemy):
             strength=25,  # низкая сила
             hostility='LOW',  # низкая враждебность
             moving_pattern='teleport_and_invisible',
-            view={'letter': 'G', 'color': 'white'}
+            view={'letter': 'G', 'color': 'white'},
+            x=cord_x,
+            y=cord_y
         )
 
     # Телепортация и невидимость пока игрок не в бою
     # Продумать, нужен ли путь перехода
     def move_pattern(self):
-        room_cords = 10 # Координаты комнаты, необходимо изменить
+        room_cords = 10  # Координаты комнаты, необходимо изменить
         for _ in range(MAX_TRIES):
             direction_x = randint(0, room_cords)  # Рандомное число из ширины комнаты
             direction_y = randint(0, room_cords)  # Рандомное число из высоты комнаты
@@ -177,7 +188,7 @@ class Ghost(Enemy):
 
 
 class Ogre(Enemy):
-    def __init__(self):
+    def __init__(self, cord_x, cord_y):
         super().__init__(
             type_='ogre',
             health=150,  # очень высокое здоровье
@@ -185,7 +196,9 @@ class Ogre(Enemy):
             strength=150,  # очень высокая сила
             hostility='AVERAGE',  # средняя враждебность
             moving_pattern='move_two_tiles',
-            view={'letter': 'O', 'color': 'yellow'}
+            view={'letter': 'O', 'color': 'yellow'},
+            x=cord_x,
+            y=cord_y
         )
         self.cooldown_after_attack = False
 
@@ -197,13 +210,12 @@ class Ogre(Enemy):
             # if Если не выходит за границу и ячейка свободна еще раз проверить следующую:
             new_cords = super().change_cords(self.cords, direction)
             # if Если не выходит за границу и ячейка свободна
-            self.cords = new_cords
+            self.cords['x'], self.cords['y'] = new_cords
             break
 
 
-
 class Snake(Enemy):
-    def __init__(self):
+    def __init__(self, cord_x, cord_y):
         super().__init__(
             type_='snake',
             health=100,  # здоровье
@@ -211,25 +223,29 @@ class Snake(Enemy):
             strength=30,  # сила
             hostility='HIGH',  # высокая враждебность
             moving_pattern='diagonal_move',
-            view={'letter': 'S', 'color': 'white'}
+            view={'letter': 'S', 'color': 'white'},
+            x=cord_x,
+            y=cord_y
         )
-        self.player_asleep_chance = 0.2  # примерная вероятность усыпить игрока
         # self.last_cords = self.cords
         self.direction = DIRECTIONS[4]
 
-    def move_pattern(self, ):
+    def move_pattern(self):
         for _ in range(MAX_TRIES):
             direction = choice(DIRECTIONS[4:])
+            with open('d.log', 'a') as f:
+                f.write(str(direction) + '\n')
             if direction != self.direction:
                 new_cords = super().change_cords(self.cords, direction)
                 # if Если не выходит за границу и ячейка свободна
                 self.direction = direction
-                self.cords = new_cords
+                self.cords['x'], self.cords['y'] = new_cords
+                with open('d.log','a') as f:
+                    f.write(str(new_cords) + '\n')
                 break
         # if Если не выходит за границу и ячейка свободна
         new_cords = super().change_cords(self.cords, self.direction)
-        self.cords = new_cords
-
+        self.cords['x'], self.cords['y'] = new_cords
 
 
 class Fight:
@@ -316,3 +332,59 @@ class Fight:
                 randint(0, 19))
 
 
+# удаляет монстра из комнаты после его смерти, сдвигая остальных в списке.
+def delete_monster_info():
+    pass
+
+
+# обновляет статус боёв, включая начало новых при контакте игрока с монстром,
+# и завершая бои, если игрок отошёл или монстр погиб.
+def update_fight_status():
+    pass
+
+
+# инициализирует новый бой для монстра в массиве боёв.
+def init_battle():
+    pass
+
+
+# проверяет физический контакт игрока с врагом (соседние или диагональные клетки).
+def check_contact():
+    pass
+
+
+# проверяет, атакует ли игрок монстра выбранным направлением.
+# Для этого она сначала вычисляет новые координаты игрока после перемещения
+# в выбранном направлении (не меняя текущие координаты), затем сравнивает эти координаты
+# с координатами монстра в бою.
+# Если они совпали, вызывается функция атаки, и флаг player_is_attacking выставляется в true.
+def check_player_attack():
+    pass
+
+
+# функции для проверки равенства координат и соседа по горизонтали, вертикали и диагонали.
+def check_equal_cords():
+    pass
+
+
+# проверяет, являются ли две координаты соседними по горизонтали или вертикали
+# (разница координат по одной из осей равна 1, а по другой — 0).
+# Используется для определения, находится ли игрок рядом с монстром по прямой оси.
+def check_if_neighbor_tile():
+    pass
+
+
+# проверяет, являются ли две координаты диагональными соседними (разница по обеим осям равна 1).
+# В игре это учитывается, например, для змей (Snake), которые могут атаковать по диагонали.
+def check_if_diagonally_neighbour_tile():
+    pass
+
+
+# проверяет, не участвует ли враг уже в текущем бою.
+def check_unique():
+    pass
+
+
+# возвращает координаты монстра.
+def get_monster_coordinates():
+    pass
