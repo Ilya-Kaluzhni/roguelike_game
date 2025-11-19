@@ -68,7 +68,7 @@ class Enemy:
         return x, y
 
     def move(self, character_cords, neighbors_cells):
-        if self.check_character_near(character_cords):
+        if self.chase_character or self.check_character_near(character_cords):
             self.shortest_path(character_cords, neighbors_cells)
         else:
             self.move_pattern()
@@ -78,7 +78,7 @@ class Enemy:
 
     @staticmethod
     def get_distance(cell_cords, enemy_cords):
-        return abs(cell_cords['x'] - enemy_cords['x']) + abs(cell_cords['y'] - enemy_cords['y'])
+        return abs(cell_cords[0] - enemy_cords['x']) + abs(cell_cords[1] - enemy_cords['y'])
 
     # neighbors - список соседних с монстром клеток, скорее всего через класс комнаты подается
     def shortest_path(self, character_cords, neighbors):
@@ -94,7 +94,7 @@ class Enemy:
             if dist < min_dist:
                 min_dist = dist
                 nearest = cell
-        self.cords = nearest
+        self.cords['x'], self.cords['y'] = nearest[0], nearest[1]
         return nearest
 
     def check_character_near(self, character_cords):
@@ -303,7 +303,7 @@ class Fight:
     # формулы расчёта урона для разных монстров
     def monster_damage_formula(self):
         if self.monster.type == 'vampire':
-            return self.player.regen_limit / self.max_hp_part  # Что такое regen_limit
+            return self.player.max_health / self.max_hp_part
         elif self.monster.type == 'ogre':
             if not self.monster.cooldown_after_attack:
                 self.monster.cooldown_after_attack = True
@@ -334,3 +334,59 @@ class Fight:
                 randint(0, 19))
 
 
+# удаляет монстра из комнаты после его смерти, сдвигая остальных в списке.
+def delete_monster_info():
+    pass
+
+
+# обновляет статус боёв, включая начало новых при контакте игрока с монстром,
+# и завершая бои, если игрок отошёл или монстр погиб.
+def update_fight_status():
+    pass
+
+
+# инициализирует новый бой для монстра в массиве боёв.
+def init_battle():
+    pass
+
+
+# проверяет физический контакт игрока с врагом (соседние или диагональные клетки).
+def check_contact():
+    pass
+
+
+# проверяет, атакует ли игрок монстра выбранным направлением.
+# Для этого она сначала вычисляет новые координаты игрока после перемещения
+# в выбранном направлении (не меняя текущие координаты), затем сравнивает эти координаты
+# с координатами монстра в бою.
+# Если они совпали, вызывается функция атаки, и флаг player_is_attacking выставляется в true.
+def check_player_attack():
+    pass
+
+
+# функции для проверки равенства координат и соседа по горизонтали, вертикали и диагонали.
+def check_equal_cords():
+    pass
+
+
+# проверяет, являются ли две координаты соседними по горизонтали или вертикали
+# (разница координат по одной из осей равна 1, а по другой — 0).
+# Используется для определения, находится ли игрок рядом с монстром по прямой оси.
+def check_if_neighbor_tile():
+    pass
+
+
+# проверяет, являются ли две координаты диагональными соседними (разница по обеим осям равна 1).
+# В игре это учитывается, например, для змей (Snake), которые могут атаковать по диагонали.
+def check_if_diagonally_neighbour_tile():
+    pass
+
+
+# проверяет, не участвует ли враг уже в текущем бою.
+def check_unique():
+    pass
+
+
+# возвращает координаты монстра.
+def get_monster_coordinates():
+    pass
