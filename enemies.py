@@ -267,7 +267,7 @@ class Fight:
         self.loot_dexterity_factor = 0.2
         self.loot_hp_factor = 0.5
         self.loot_strength_factor = 0.5
-        # self.maximum_fights = 8
+        self.maximum_fights = 8
         self.player_first_attack = True
 
     # 1 этап 'Расчет удара' вычисляет вероятность успешного попадания удара
