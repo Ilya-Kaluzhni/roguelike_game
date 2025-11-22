@@ -1,16 +1,17 @@
 from random import choice, randint, random
+from static import Directions
 
-DIRECTIONS = [
-    'FORWARD',
-    'LEFT',
-    'RIGHT',
-    'BACK',
-    'DIAGONALLY_UP_LEFT',
-    'DIAGONALLY_UP_RIGHT',
-    'DIAGONALLY_DOWN_LEFT',
-    'DIAGONALLY_DOWN_RIGHT',
-    'STOP'
-]
+# DIRECTIONS = [
+#     'FORWARD',
+#     'LEFT',
+#     'RIGHT',
+#     'BACK',
+#     'DIAGONALLY_UP_LEFT',
+#     'DIAGONALLY_UP_RIGHT',
+#     'DIAGONALLY_DOWN_LEFT',
+#     'DIAGONALLY_DOWN_RIGHT',
+#     'STOP'
+# ]
 
 MAX_TRIES = 16
 
@@ -31,75 +32,73 @@ class Enemy:
                  x=0,
                  y=0):
         self.type = type_
-        self.current_health = health
+        self.health = health
         self.dexterity = dexterity
         self.strength = strength
-        self.direction = direction
         self.hostility = hostility
-        self.moving_pattern = moving_pattern
         self.view = view or {}
-        self.cords = {'x': x, 'y': y}
+        # self.cords = {'x': x, 'y': y}
+        self.x = x
+        self.y = y
         self.chase_character = False
+        self.in_fight = False
 
     @staticmethod
-    def change_cords(current_cords, direction):
-        x, y = current_cords['x'], current_cords['y']
-
-        if direction == 'UP':
-            y -= 1
-        elif direction == 'DOWN':
-            y += 1
-        elif direction == 'LEFT':
-            x -= 1
-        elif direction == 'RIGHT':
-            x += 1
-        elif direction == 'DIAGONALLY_UP_LEFT':
-            x -= 1
-            y -= 1
-        elif direction == 'DIAGONALLY_UP_RIGHT':
-            x += 1
-            y -= 1
-        elif direction == 'DIAGONALLY_DOWN_LEFT':
-            x -= 1
-            y += 1
-        elif direction == 'DIAGONALLY_DOWN_RIGHT':
-            x += 1
-            y += 1
-        return x, y
+    def change_cords(cord_x, cord_y, direction):
+        dx, dy = direction.value
+        cord_x += dx
+        cord_y += dy
+        return cord_x, cord_y
 
     def move(self, character_cords, neighbors_cells):
-        if self.check_character_near(character_cords):
-            self.shortest_path(character_cords, neighbors_cells)
+        if self.chase_character or self.check_character_near(character_cords):
+            return self.shortest_path(character_cords, neighbors_cells)
         else:
-            self.move_pattern()
+            return self.move_pattern()
 
     def move_pattern(self):
         pass
 
     @staticmethod
     def get_distance(cell_cords, enemy_cords):
-        return abs(cell_cords['x'] - enemy_cords['x']) + abs(cell_cords['y'] - enemy_cords['y'])
+        return abs(cell_cords[0] - enemy_cords[0]) + abs(cell_cords[1] - enemy_cords[1])
 
     # neighbors - список соседних с монстром клеток, скорее всего через класс комнаты подается
     def shortest_path(self, character_cords, neighbors):
-        # min_distance = abs(self.cords['x'] - character_cords['x']) + abs(self.cords['y'] - character_cords['y'])
-        # directions = [(-1, -1), (-1, 0), (-1, 1),
-        #               (0, -1), (0, 1),
-        #               (1, -1), (1, 0), (1, 1)]
-
-        nearest = self.cords
-        min_dist = float('inf')
-        for cell in neighbors:
-            dist = self.get_distance(cell, character_cords)
+        steps = [
+            (-1, -1), (0, -1), (1, -1),
+            (-1, 0), (1, 0),
+            (-1, 1), (0, 1), (1, 1)
+        ]
+        nearest = self.get_cords()
+        min_dist = self.get_distance(nearest, character_cords)
+        for dx, dy in steps:
+            new_x = self.x + dx
+            new_y = self.y + dy
+            dist = self.get_distance((new_x,new_y), character_cords)
             if dist < min_dist:
                 min_dist = dist
-                nearest = cell
-        self.cords = nearest
+                nearest = (new_x,new_y)
+        # for cell in neighbors:
+        #     dist = self.get_distance(cell, character_cords)
+        #     if dist < min_dist:
+        #         min_dist = dist
+        #         nearest = cell
+        #     with open('d.log', 'a') as f:
+        #         f.write(f'{nearest,cell,dist}\n')
+        if min_dist == 0:
+            self.in_fight = True
+            return 'attack'
+        elif min_dist == 1:
+            self.in_fight = True
+            self.x, self.y = nearest[0], nearest[1]
+            return 'attack'
+        self.x, self.y = nearest[0], nearest[1]
         return nearest
 
     def check_character_near(self, character_cords):
-        distance_x = self.cords['x'] - character_cords['x']
-        distance_y = self.cords['y'] - character_cords['y']
+        distance_x = self.x - character_cords[0]
+        distance_y = self.y - character_cords[1]
         distance = abs(distance_x) + abs(distance_y)
         if distance <= DETECTION_RANGE[self.hostility]:
             self.chase_character = True
@@ -107,7 +106,10 @@ class Enemy:
             self.chase_character = False
 
     def get_cords(self):
-        return self.cords['x'], self.cords['y']
+        return self.x, self.y
+
+    def down_health(self, damage):
+        self.health -= damage
 
 
 class Zombie(Enemy):
@@ -128,12 +130,10 @@ class Zombie(Enemy):
     # Выбирает рандомно направление движения из 4 возможных направлений
     def move_pattern(self):
         for _ in range(MAX_TRIES):
-            direction = choice(['UP', 'LEFT', 'RIGHT', 'DOWN'])
-            new_cords = super().change_cords(self.cords, direction)
+            direction = choice(Directions.simple_directions())
+            new_cords = super().change_cords(self.x, self.y, direction)
             # if Если не выходит за границу и ячейка свободна:
-            self.cords['x'], self.cords['y'] = new_cords
-            with open('d.log', 'a') as f:
-                f.write(str(new_cords))
+            self.x, self.y = new_cords
             break
 
 
@@ -155,10 +155,10 @@ class Vampire(Enemy):
     # Выбирает рандомно направление движения из всех возможных направлений
     def move_pattern(self):
         for _ in range(MAX_TRIES):
-            direction = choice(DIRECTIONS)
-            new_cords = super().change_cords(self.cords, direction)
+            direction = choice(list(Directions))
+            new_cords = super().change_cords(self.x, self.y, direction)
             # if Если не выходит за границу и ячейка свободна:
-            self.cords['x'], self.cords['y'] = new_cords
+            self.x, self.y = new_cords
             break
 
 
@@ -184,7 +184,7 @@ class Ghost(Enemy):
             direction_x = randint(0, room_cords)  # Рандомное число из ширины комнаты
             direction_y = randint(0, room_cords)  # Рандомное число из высоты комнаты
             # if Если не выходит за границу и ячейка свободна:
-            self.cords['x'], self.cords['x'] = direction_x, direction_y
+            self.x, self.y = direction_x, direction_y
             break
 
 
@@ -206,13 +206,15 @@ class Ogre(Enemy):
     # Перемещается на 2 шага
     def move_pattern(self):
         for _ in range(MAX_TRIES):
-            direction = choice(['UP', 'LEFT', 'RIGHT', 'DOWN'])
-            first_step = {'x': (super().change_cords(self.cords, direction))[0],
-                          'y': (super().change_cords(self.cords, direction))[1]}
+            direction = choice(Directions.simple_directions())
+            first_step_x, first_step_y = super().change_cords(self.x, self.y, direction)
+            # first_step_x = {'x': (super().change_cords(self.cords, direction))[0],
+            #               'y': (super().change_cords(self.cords, direction))[1]}
             # if Если не выходит за границу и ячейка свободна еще раз проверить следующую:
-            new_cords = super().change_cords(first_step, direction)
+            new_cords = super().change_cords(first_step_x, first_step_y, direction)
+
             # if Если не выходит за границу и ячейка свободна
-            self.cords['x'], self.cords['y'] = new_cords
+            self.x, self.y = new_cords
             break
 
 
@@ -230,31 +232,25 @@ class Snake(Enemy):
             y=cord_y
         )
         # self.last_cords = self.cords
-        self.direction = DIRECTIONS[4]
+        self.direction = choice(Directions.diagonal_directions())
 
     def move_pattern(self):
         for _ in range(MAX_TRIES):
-            direction = choice(DIRECTIONS[4:])
-            with open('d.log', 'a') as f:
-                f.write(str(direction) + '\n')
+            direction = choice(Directions.diagonal_directions())
             if direction != self.direction:
-                new_cords = super().change_cords(self.cords, direction)
+                new_cords = super().change_cords(self.x, self.y, direction)
                 # if Если не выходит за границу и ячейка свободна
                 self.direction = direction
-                self.cords['x'], self.cords['y'] = new_cords
-                with open('d.log', 'a') as f:
-                    f.write(str(new_cords) + '\n')
+                self.x, self.y = new_cords
                 break
-        # if Если не выходит за границу и ячейка свободна
-        new_cords = super().change_cords(self.cords, self.direction)
-        self.cords['x'], self.cords['y'] = new_cords
 
 
 class Fight:
     def __init__(self, player, monster):
         self.player = player
+        self.player.in_fight = True
         self.monster = monster
-        self.turn_player = True
+        self.turn_player = False
         self.hit_chance = 70
         self.dexterity_factor = 0.3
         self.standard_dexterity = 50
@@ -287,7 +283,7 @@ class Fight:
         if self.turn_player:
             if not (self.monster.type == 'vampire' and self.player_first_attack) and not (
                     self.monster.type == 'snake' and self.player.asleep):
-                if self.player.current_weapon.strength:
+                if self.player.current_weapon and self.player.current_weapon.strength:
                     damage += self.player.current_weapon.strength * (
                             self.player.strength + self.strength_addition) / 100
                 else:
@@ -321,11 +317,23 @@ class Fight:
         if self.turn_player:
             if self.check_hit():
                 self.monster.health -= self.calculate_damage()
+                message = 'Удар по монстру'
+            else:
+                message = 'Промах по монстру'
             if self.monster.health <= 0:
                 self.player.backpack.treasures += self.calculate_loot()
+                message = 'Победа'
         else:
             if self.check_hit():
                 self.player.health -= self.calculate_damage()
+                message = 'Удар по персу'
+            else:
+                message = 'Промах по персу'
+        self.next_turn()
+        return message
+
+    def set_turn_monster(self):
+        self.turn_player = False
 
     def calculate_loot(self):
         return (self.monster.dexterity * self.loot_dexterity_factor +
@@ -333,4 +341,18 @@ class Fight:
                 self.monster.strength * self.loot_strength_factor +
                 randint(0, 19))
 
+    def next_turn(self):
+        self.turn_player = not self.turn_player
+        if self.turn_player:
+            self.player_first_attack = False
 
+    def player_action(self, new_cords):
+        monster_cords = self.monster.get_cords()
+        if new_cords == monster_cords:
+            message = self.attack()
+        else:
+            # Движение (отход) — передаем ход монстру
+            self.turn_player = False
+            message = "Игрок отступил. Ход монстра."
+
+        return message
