@@ -45,6 +45,8 @@ class MoveEnemy:
             enemy.in_fight = True
             if min_dist == 1:
                 enemy.set_cords(nearest[0], nearest[1])
+                self.level.tiles[nearest[1]][nearest[0]] = '.'  # в зависимости от типа точки
+                self.level.tiles[nearest[1]][nearest[0]] = enemy.view['letter']
 
     @staticmethod
     def get_distance(cell_cords, enemy_cords):
