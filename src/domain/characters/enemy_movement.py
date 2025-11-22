@@ -44,7 +44,7 @@ class MoveEnemy:
         if min_dist <= 1:
             enemy.in_fight = True
             if min_dist == 1:
-                enemy.x, enemy.y = nearest[0], nearest[1]
+                enemy.set_cords(nearest[0], nearest[1])
 
     @staticmethod
     def get_distance(cell_cords, enemy_cords):
