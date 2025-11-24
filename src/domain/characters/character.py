@@ -64,7 +64,8 @@ class Character:
 
 
 class Backpack:
-    max_capacity = 10
+    max_capacity_weapon = 10
+    max_capacity = 9
 
     def __init__(self):
         self.items = {
@@ -81,6 +82,8 @@ class Backpack:
         if item.type == 'treasure':
             self.treasure += item.value
             return f"Вы получили {item.value} сокровищ"
+        if self.items[item.type] == 'weapon' and len(self.items[item.type]) >= self.max_capacity:
+            return f"Уберите оружие чтобы взять новое"
         if len(self.items[item.type]) >= self.max_capacity:
             return f"Отделение {item.type} в рюкзаке заполнено"
         self.items[item.type].append(item)
