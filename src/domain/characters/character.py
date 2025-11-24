@@ -53,6 +53,15 @@ class Character:
         result = effect_processor.apply_item(self, item)
         return result
 
+    def presentation_data(self):
+        return {
+            'health': self.health,
+            'max_health': self.max_health,
+            'strength': self.strength,
+            'x': self.x,
+            'y': self.y
+        }
+
 
 class Backpack:
     max_capacity = 10

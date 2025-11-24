@@ -49,3 +49,11 @@ class Enemy:
     def set_cords(self, new_x, new_y):
         self.x = new_x
         self.y = new_y
+
+    def presentation_data(self):
+        return {
+            'letter': self.view['letter'],
+            'color': self.view['color'],
+            'x': self.x,
+            'y': self.y
+        }
