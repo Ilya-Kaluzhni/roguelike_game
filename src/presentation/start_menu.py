@@ -1,6 +1,12 @@
 import curses
 import time
+from enum import Enum
 
+
+class MenuId(Enum):
+    NEW_GAME = 1,
+    OLD_GAME = 2,
+    EXIT = 3
 
 class StartScreen:
     wave_offsets = [0, 1, 2, 1, 0, -1, -2, -1]
@@ -89,23 +95,33 @@ class StartScreen:
             else:
                 self.stdscr.addstr(y, x, row)
 
+    def draw_menu(self):
+        self.stdscr.clear()
+        h, w = self.stdscr.getmaxyx()
+        self.shift_letters(5, w // 2 - 20)
+        if self.get_name:
+            self.get_player_name(h - 10, w // 2 - 20)
+        else:
+            self.show_menu(h - 10, w // 2)
+        self.counter = (self.counter + 1) % len(self.wave_offsets)
+        self.stdscr.refresh()
+
+    def processing_enter(self):
+        if self.get_name:
+            if not self.input_str:
+                self.command = "Необходимо ввести имя:"
+            else:
+                self.get_name = False
+        else:
+            self.go_on = self.current_row + 1
+
     def screen(self):
         self.stdscr.nodelay(True)
-        curses.curs_set(1)
+        curses.curs_set(0)
+
         while True:
-            self.stdscr.clear()
-            h, w = self.stdscr.getmaxyx()
+            self.draw_menu()
 
-            self.shift_letters(5, w // 2 - 20)
-
-            if self.get_name:
-                self.get_player_name(h - 10, w // 2 - 20)
-            else:
-                self.show_menu(h - 10, w // 2 )
-
-            self.stdscr.refresh()
-
-            self.counter = (self.counter + 1) % len(self.wave_offsets)
             time_for_sleep = 0.3
             ch = self.stdscr.getch()
             if ch != -1:
@@ -118,18 +134,21 @@ class StartScreen:
                         else:
                             self.get_name = False
                     else:
-                        ch = 113
+                        break
                 elif ch in (8, 127):
                     self.input_str = self.input_str[:-1]
+                elif 32 <= ch <= 126:
+                    self.input_str += chr(ch)
                 elif ch == curses.KEY_UP:
                     self.current_row = (self.current_row - 1) % len(self.menu_items)
                 elif ch == curses.KEY_DOWN:
                     self.current_row = (self.current_row + 1) % len(self.menu_items)
-                elif 32 <= ch <= 126:
-                    self.input_str += chr(ch)
+
                 # Исправить на esc!
                 if ch == 113:
                     break
                 time_for_sleep = 0.1
 
             time.sleep(time_for_sleep)
+        # self.stdscr.clear()
+        return self.current_row + 1
