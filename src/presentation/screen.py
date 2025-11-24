@@ -13,6 +13,7 @@ class MenuId(Enum):
     OLD_GAME = 2
     EXIT = 3
 
+
 def create_windows(stdscr):
     screen_height, screen_width = stdscr.getmaxyx()
     spacing = 5
@@ -32,17 +33,18 @@ def create_windows(stdscr):
     start_y2 = max((screen_height - height2) // 2, 0)
     start_y3 = max((screen_height - height3) // 2, 0)
 
+
 def main(stdscr):
     start_screen = StartScreen(stdscr)
     next_step = start_screen.screen()
     # stdscr.clear()
-    next_step =1
+    next_step = 1
 
     if next_step == MenuId.EXIT.value:
         return
     # curs_set(0)
     # Левая панель
-    screen_height,screen_width = stdscr.getmaxyx()
+    screen_height, screen_width = stdscr.getmaxyx()
     width1, width2, width3 = 21, 82, 20
     spacing = 5
     total_width = width1 + spacing + width2 + spacing + width3
@@ -51,9 +53,8 @@ def main(stdscr):
     start_x = max((screen_width - total_width) // 2, 0)
     win_rules = RulesWindow(stdscr, start_y, start_x)
 
-
     # Игровая панель
-    game_map = GameMap(1,2)
+    game_map = GameMap(1, 2)
 
     rooms = [
         {'x': 5, 'y': 3, 'width': 8, 'height': 6},
@@ -93,7 +94,7 @@ def main(stdscr):
     monsters = []
     items = []
     start_y2 = max((screen_height - 27) // 2, 0)
-    win_game = RenderingActors(stdscr, game_map, player_pos, monsters, items, start_y,start_x)
+    win_game = RenderingActors(stdscr, game_map, player_pos, monsters, items, start_y, start_x)
     # win2 = stdscr.subwin(27, 82, start_y, start_x + width1 + spacing)
     # win2.border()
     # win2.refresh()
@@ -103,10 +104,7 @@ def main(stdscr):
     backpack_height = 15
     backpack_width = 20
     win_backpack = InterfaceBackpack(stdscr, height=backpack_height, width=backpack_width, begin_y=backpack_y,
-                                 begin_x=backpack_x)
-
-
-
+                                     begin_x=backpack_x)
 
     if next_step == MenuId.NEW_GAME.value:
 
@@ -143,8 +141,6 @@ def main(stdscr):
     # win1.noutrefresh()
     # win2.noutrefresh()
     # curses.doupdate()
-
-
 
 
 wrapper(main)

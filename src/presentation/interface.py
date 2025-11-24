@@ -41,7 +41,6 @@ class InterfaceBackpack:
         self.window.border()
         self.window.refresh()
 
-
 # def main(stdscr):
 #     interface = InterfaceBackpack(stdscr, height=15, width=40, begin_y=2, begin_x=2)
 #     weapons = ['Кинжал', 'Меч', 'Лук']

@@ -1,6 +1,3 @@
-# import curses
-
-
 class GameMap:
     def __init__(self, width, height):
         self.width = 80

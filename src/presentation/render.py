@@ -3,8 +3,6 @@ import curses
 import curses
 
 
-
-
 class RenderingActors:
     def __init__(self, stdscr, game_map, player_coords, monsters=None, items=None, start_y=0, start_x=0):
         # self.stdscr = stdscr
@@ -65,7 +63,6 @@ class RenderingActors:
         self.items = items or []
         self.game_map.update_visibility(self.player_x, self.player_y)
         self.render()
-
 
 # def main(stdscr):
 #     curses.curs_set(0)  # Скрыть курсор
