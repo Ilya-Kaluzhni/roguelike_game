@@ -4,28 +4,10 @@ import curses
 
 
 class RenderingActors:
-    def __init__(self, stdscr, game_map, player_coords, monsters=None, items=None, start_y=0, start_x=0):
-        self.window = stdscr.subwin(30, 82, start_y, start_x + 5 + 21)
-
-        self.game_map = game_map
-        self.player_x, self.player_y = player_coords
-        self.monsters = monsters or []
-        self.monsters_data = {
-            'Z': 32,
-            'G': 30,
-            'O': 35,
-            'V': 31,
-            'S': 30
-        }
-
-        self.items = items
-        self.items_data = {
-            'w': [31, curses.ACS_UARROW],
-            'f': [32, '♣'],
-            'e': [33, curses.ACS_PLMINUS],
-            's': [34, curses.ACS_DIAMOND],
-            't': [35, '*']
-        }
+    def __init__(self, stdscr, start_y=0, start_x=0):
+        self.height = 25
+        self.width = 80
+        self.window = stdscr.subwin(self.height, self.width, start_y, start_x)
         curses.start_color()
         curses.use_default_colors()
 
@@ -39,8 +21,33 @@ class RenderingActors:
         curses.init_pair(34, curses.COLOR_BLUE, curses.COLOR_BLACK)
         curses.init_pair(35, curses.COLOR_YELLOW, curses.COLOR_BLACK)
 
+        # Игровые данные устанавливаются позднее
+        self.game_map = None
+        self.player_x = None
+        self.player_y = None
+        self.monsters = []
+        self.monsters_data = {
+            'Z': 32,
+            'G': 30,
+            'O': 35,
+            'V': 31,
+            'S': 30
+        }
 
+        self.items = []
+        self.items_data = {
+            'w': [31, curses.ACS_UARROW],
+            'f': [32, '♣'],
+            'e': [33, curses.ACS_PLMINUS],
+            's': [34, curses.ACS_DIAMOND],
+            't': [35, '*']
+        }
 
+    def setup_game_objects(self, game_map, player_coords, monsters=None, items=None):
+        self.game_map = game_map
+        self.player_x, self.player_y = player_coords
+        self.monsters = monsters or []
+        self.items = items or []
 
     def draw_map(self):
         for y in range(self.game_map.height):
@@ -48,14 +55,13 @@ class RenderingActors:
                 ch = self.game_map.get_tile_display(x, y)
                 if ch in ('#', '.', '+', ','):
                     color = curses.color_pair(0)
-                    if ch ==',':
+                    if ch == ',':
                         ch = '.'
                         color = curses.color_pair(2) | curses.A_DIM
                     try:
                         self.window.addch(y, x, ch, color)
                     except curses.error:
                         pass
-
 
     def draw_actors(self):
         self.draw_items()
@@ -80,7 +86,7 @@ class RenderingActors:
         self.window.border()
         self.draw_map()
         self.draw_actors()
-        self.window.refresh()
+        self.window.noutrefresh()
 
     def update(self, player_coords, monsters=None, items=None):
         self.player_x, self.player_y = player_coords

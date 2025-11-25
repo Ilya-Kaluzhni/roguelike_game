@@ -20,5 +20,5 @@ class PlayerStats:
         )
 
         self.window.addstr(1, 1, line)
-        self.window.refresh()
+        self.window.noutrefresh()
 

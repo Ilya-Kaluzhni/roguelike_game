@@ -1,9 +1,8 @@
-
-
-
 class InterfaceBackpack:
-    def __init__(self, stdscr, height=15, width=20, begin_y=0, begin_x=0):
-        self.window = stdscr.subwin(height, width, begin_y, begin_x)
+    def __init__(self, stdscr, begin_y=0, begin_x=0):
+        self.height = 15
+        self.width = 20
+        self.window = stdscr.subwin(self.height, self.width, begin_y, begin_x)
         self.w_backpack = (1, 2)
         self.w_weapon = (self.w_backpack[0] + 1, self.w_backpack[1])
         self.w_food = (self.w_weapon[0] + 1, self.w_weapon[1])
@@ -19,7 +18,7 @@ class InterfaceBackpack:
         self.window.addstr(self.w_elixir[0], self.w_elixir[1], 'Эликсир (k)')
         self.window.addstr(self.w_scroll[0], self.w_scroll[1], 'Свиток (e)')
         self.window.border()
-        self.window.refresh()
+        self.window.noutrefresh()
 
     def show_current_items(self, item_type, items_list):
         if item_type == 'weapon':
@@ -39,7 +38,7 @@ class InterfaceBackpack:
             y = start_y + i + 1 - start_index
             self.window.addstr(y, start_x, f"{i}. {item}")
         self.window.border()
-        self.window.refresh()
+        self.window.noutrefresh()
 
 # def main(stdscr):
 #     interface = InterfaceBackpack(stdscr, height=15, width=40, begin_y=2, begin_x=2)

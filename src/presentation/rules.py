@@ -2,7 +2,7 @@ import curses
 
 
 class RulesWindow:
-    def __init__(self, stdscr, screen_height, screen_width):
+    def __init__(self, stdscr,screen_height, screen_width):
         self.height = 15
         self.width = 21
         self.start_y = screen_height
@@ -42,11 +42,11 @@ class RulesWindow:
         self.win.addstr(12, 3, 'по направлению')
         self.win.addstr(13, 3, 'к противнику')
 
-        self.win.refresh()
-        self.btn_w.refresh()
-        self.btn_a.refresh()
-        self.btn_s.refresh()
-        self.btn_d.refresh()
+        self.win.noutrefresh()
+        self.btn_w.noutrefresh()
+        self.btn_a.noutrefresh()
+        self.btn_s.noutrefresh()
+        self.btn_d.noutrefresh()
 
     def _draw_button(self, btn_window, char, active=False):
         color = self.active_color if active else self.normal_color
@@ -56,7 +56,7 @@ class RulesWindow:
         btn_window.box()
         btn_window.attroff(color)
         btn_window.addstr(1, 2, char, curses.A_BOLD | color)
-        btn_window.refresh()
+        btn_window.noutrefresh()
 
     def press_btn(self, key_char):
         key_char = chr(key_char).upper()
@@ -68,16 +68,16 @@ class RulesWindow:
         self._draw_button(getattr(self, f'btn_{key_char.lower()}'), key_char, active=True)
 
 
-def main(stdscr):
-    curses.curs_set(0)
-    stdscr.clear()
-    start_y, start_x = stdscr.getmaxyx()
-
-    ctrl_win = RulesWindow(stdscr, start_y, start_x)
-    ctrl_win.draw_controls()
-
-    stdscr.getch()
-
-
-if __name__ == "__main__":
-    curses.wrapper(main)
+# def main(stdscr):
+#     curses.curs_set(0)
+#     stdscr.clear()
+#     start_y, start_x = stdscr.getmaxyx()
+#
+#     ctrl_win = RulesWindow(stdscr, start_y, start_x)
+#     ctrl_win.draw_controls()
+#
+#     stdscr.getch()
+#
+#
+# if __name__ == "__main__":
+#     curses.wrapper(main)

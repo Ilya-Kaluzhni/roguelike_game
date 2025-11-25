@@ -18,47 +18,49 @@ class MenuId(Enum):
     EXIT = 3
 
 
-def create_windows(stdscr):
+def create_data_windows(stdscr):
     screen_height, screen_width = stdscr.getmaxyx()
     spacing = 5
 
-    width1 = 21
-    width2 = 82
-    width3 = 40
+    width_rules = 21
+    width_game = 80
+    width_interface = 20
 
-    height1 = 10
-    height2 = 27
-    height3 = 10
+    height_rules = 15
+    height_game = 25
+    height_interface = 15
+    height_stats = 3
 
-    total_width = width1 + spacing + width2 + spacing + width3
-    start_x = max((screen_width - total_width) // 2, 0)
+    total_width = width_rules + width_game + width_interface + spacing * 2
+    start_y = (screen_height - max(height_rules, height_game, height_interface, height_stats)) // 2
+    start_x = (screen_width - total_width) // 2
 
-    start_y1 = max((screen_height - height1) // 2, 0)
-    start_y2 = max((screen_height - height2) // 2, 0)
-    start_y3 = max((screen_height - height3) // 2, 0)
+    win_rules = RulesWindow(stdscr, start_y, start_x)
+
+    start_x_shift = start_x+ spacing + win_rules.width
+
+    win_game = RenderingActors(stdscr, start_y, start_x_shift)
+
+    start_x_shift += spacing + win_game.width
+
+    win_backpack = InterfaceBackpack(stdscr, start_y, start_x_shift)
+
+    start_y += win_game.height
+
+    start_x_shift -= spacing + win_game.width
+
+    win_stats = PlayerStats(stdscr, start_y, start_x_shift)
+
+    return win_rules, win_game, win_backpack, win_stats
 
 
 def main(stdscr):
+    curses.curs_set(0)
     start_screen = StartScreen(stdscr)
     next_step = start_screen.screen()
-    # stdscr.clear()
-    next_step = 1
-    # controller = Controller()
+    stdscr.clear()
     if next_step == MenuId.EXIT.value:
         return
-    # curs_set(0)
-    # Левая панель
-    screen_height, screen_width = stdscr.getmaxyx()
-    width1, width2, width3 = 21, 82, 20
-    spacing = 5
-    total_width = width1 + spacing + width2 + spacing + width3
-    total_height = 27
-    start_y = 10
-    start_x = max((screen_width - total_width) // 2, 0)
-    win_rules = RulesWindow(stdscr, start_y, start_x)
-
-    # Игровая панель
-    game_map = GameMap()
 
     rooms = [
         {'x': 5, 'y': 3, 'width': 8, 'height': 6},
@@ -103,38 +105,23 @@ def main(stdscr):
         {'x': 40, 'y': 7, 'type': 'Z'},
     ]
 
+    win_rules, win_game, win_backpack, win_stats = create_data_windows(stdscr)
+
+    game_map = GameMap()
     game_map.add_rooms(rooms)
     game_map.add_corridors(corridors)
 
     player_pos = (8, 4)
-    start_y2 = max((screen_height - 27) // 2, 0)
-    win_game = RenderingActors(stdscr, game_map, player_pos, monsters, items, start_y, start_x)
-    # win2 = stdscr.subwin(27, 82, start_y, start_x + width1 + spacing)
-    # win2.border()
-    # win2.refresh()
-
-    backpack_y = start_y
-    backpack_x = start_x + width1 + spacing + width2 + spacing
-    backpack_height = 15
-    backpack_width = 20
-    win_backpack = InterfaceBackpack(stdscr, height=backpack_height, width=backpack_width, begin_y=backpack_y,
-                                     begin_x=backpack_x)
-    s_y,s_x = stdscr.getmaxyx()
-    win_stats = PlayerStats(stdscr, s_y -10, start_x + width1 + spacing )
+    win_game.setup_game_objects(game_map, player_pos, monsters, items)
 
     if next_step == MenuId.NEW_GAME.value:
 
         win_rules.draw_controls()
-        win_game.update(player_pos, monsters,items)
+        win_game.update(player_pos, monsters, items)
         win_backpack.show_panel()
         win_stats.draw_stats(player_stats)
-        # stdscr.refresh()
-        # win_game.update(player_pos)
         width, height = 80, 40
-        # win_rules.draw_controls()
-        # win_game.update(player_pos, items=items)
-        # win_backpack.show_panel()
-        stdscr.refresh()
+        curses.doupdate()
         while True:
 
             key = stdscr.getch()
@@ -148,7 +135,7 @@ def main(stdscr):
                 # controller.get_input_give_update(Keys.W_UP)
             elif key in Keys.A_LEFT.value:
                 player_pos = (max(0, player_pos[0] - 1), player_pos[1])
-                win_game.update(player_pos, monsters,items)
+                win_game.update(player_pos, monsters, items)
                 win_rules.press_btn(key)
                 # controller.get_input_give_update(Keys.A_LEFT)
             elif key in Keys.S_DOWN.value:
@@ -158,8 +145,9 @@ def main(stdscr):
                 # controller.get_input_give_update(Keys.S_DOWN)
             elif key in Keys.D_RIGHT.value:
                 player_pos = (min(width - 1, player_pos[0] + 1), player_pos[1])
-                win_game.update(player_pos, monsters,items)
+                win_game.update(player_pos, monsters, items)
                 win_rules.press_btn(key)
+            curses.doupdate()
             # elif key in Keys.H_USE_WEAPON.value:
             #     controller.get_input_give_update(Keys.H_USE_WEAPON)
             # elif key in Keys.J_USE_FOOD.value:
