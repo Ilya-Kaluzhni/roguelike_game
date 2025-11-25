@@ -150,5 +150,5 @@ class StartScreen:
                 time_for_sleep = 0.1
 
             time.sleep(time_for_sleep)
-        # self.stdscr.clear()
+        self.stdscr.clear()
         return self.current_row + 1
