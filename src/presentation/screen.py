@@ -10,6 +10,7 @@ from enum import Enum
 import curses
 from player_stats import PlayerStats
 from static import Keys
+from message import MessageWindow
 
 
 class MenuId(Enum):
@@ -20,7 +21,6 @@ class MenuId(Enum):
 
 def create_data_windows(stdscr):
     screen_height, screen_width = stdscr.getmaxyx()
-    spacing = 5
 
     width_rules = 21
     width_game = 80
@@ -31,34 +31,35 @@ def create_data_windows(stdscr):
     height_interface = 15
     height_stats = 3
 
-    total_width = width_rules + width_game + width_interface + spacing * 2
+    total_width = width_rules + width_game + width_interface
     start_y = (screen_height - max(height_rules, height_game, height_interface, height_stats)) // 2
     start_x = (screen_width - total_width) // 2
 
     win_rules = RulesWindow(stdscr, start_y, start_x)
 
-    start_x_shift = start_x+ spacing + win_rules.width
+    start_x_shift = start_x + win_rules.width
+    win_message = MessageWindow(stdscr, start_y - 1, start_x_shift + 1)
 
     win_game = RenderingActors(stdscr, start_y, start_x_shift)
 
-    start_x_shift += spacing + win_game.width
+    start_x_shift += win_game.width
 
     win_backpack = InterfaceBackpack(stdscr, start_y, start_x_shift)
 
     start_y += win_game.height
 
-    start_x_shift -= spacing + win_game.width
+    start_x_shift -= win_game.width
 
     win_stats = PlayerStats(stdscr, start_y, start_x_shift)
 
-    return win_rules, win_game, win_backpack, win_stats
+    return win_message, win_rules, win_game, win_backpack, win_stats
 
 
 def main(stdscr):
     curses.curs_set(0)
     start_screen = StartScreen(stdscr)
     next_step = start_screen.screen()
-    stdscr.clear()
+    # stdscr.clear()
     if next_step == MenuId.EXIT.value:
         return
 
@@ -104,8 +105,42 @@ def main(stdscr):
         {'x': 27, 'y': 4, 'type': 'V'},
         {'x': 40, 'y': 7, 'type': 'Z'},
     ]
-
-    win_rules, win_game, win_backpack, win_stats = create_data_windows(stdscr)
+    weapons = [
+        "Короткий меч",
+        "Длинный меч",
+        "Боевой топор",
+        "Кинжал",
+        "Лук",
+        "Боевой молот",
+        "Боевой молот",
+        "Боевой молот",
+        "Боевой молот",
+        "Боевой молот"
+    ]
+    foods = [
+        "Хлеб",
+        "Яблоко",
+        "Мясо",
+        "Сыр",
+        "Ягоды",
+        "Рыба"
+    ]
+    elixirs = [
+        "Эликсир исцеления",
+        "Мана эликсир",
+        "Сила зверя",
+        "Стойкость к огню",
+        "Зелье ночного зрения"
+    ]
+    scrolls = [
+        "Свиток огненного шара",
+        "Свиток телепортации",
+        "Свиток невидимости",
+        "Свиток защиты",
+        "Свиток обнаружения ловушек"
+    ]
+    message = 'Сообщение из бэка(при необходимости)'
+    win_message, win_rules, win_game, win_backpack, win_stats = create_data_windows(stdscr)
 
     game_map = GameMap()
     game_map.add_rooms(rooms)
@@ -126,9 +161,15 @@ def main(stdscr):
 
             key = stdscr.getch()
 
-            if key == ord('q'):
+            if key == 0x1B:
                 break
-            if key in Keys.W_UP.value:
+            if message:
+                win_message.draw_line(message)
+            else:
+                win_message.clear()
+            if key == ord('q'):
+                win_backpack.show_panel()
+            elif key in Keys.W_UP.value:
                 player_pos = (player_pos[0], max(0, player_pos[1] - 1))
                 win_game.update(player_pos, monsters, items)
                 win_rules.press_btn(key)
@@ -147,22 +188,23 @@ def main(stdscr):
                 player_pos = (min(width - 1, player_pos[0] + 1), player_pos[1])
                 win_game.update(player_pos, monsters, items)
                 win_rules.press_btn(key)
+            elif key in Keys.H_USE_WEAPON.value:
+                win_backpack.show_current_items('weapon', weapons)
+                # controller.get_input_give_update(Keys.H_USE_WEAPON)
+            elif key in Keys.J_USE_FOOD.value:
+                win_backpack.show_current_items('food', foods)
+                # controller.get_input_give_update(Keys.J_USE_FOOD)
+            elif key in Keys.K_USE_ELIXIR.value:
+                win_backpack.show_current_items('elixir', elixirs)
+                # controller.get_input_give_update(Keys.K_USE_ELIXIR)
+            elif key in Keys.E_USE_SCROLL.value:
+                win_backpack.show_current_items('scroll', scrolls)
+                # controller.get_input_give_update(Keys.E_USE_SCROLL)
             curses.doupdate()
-            # elif key in Keys.H_USE_WEAPON.value:
-            #     controller.get_input_give_update(Keys.H_USE_WEAPON)
-            # elif key in Keys.J_USE_FOOD.value:
-            #     controller.get_input_give_update(Keys.J_USE_FOOD)
-            # elif key in Keys.K_USE_ELIXIR.value:
-            #     controller.get_input_give_update(Keys.K_USE_ELIXIR)
-            # elif key in Keys.E_USE_SCROLL.value:
-            #     controller.get_input_give_update(Keys.E_USE_SCROLL)
-
+            # message = ''
 
     elif next_step == MenuId.OLD_GAME.value:
         pass
-    # win1.noutrefresh()
-    # win2.noutrefresh()
-    # curses.doupdate()
 
 
 wrapper(main)

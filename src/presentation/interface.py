@@ -1,7 +1,10 @@
+import curses
+
+
 class InterfaceBackpack:
     def __init__(self, stdscr, begin_y=0, begin_x=0):
-        self.height = 15
-        self.width = 20
+        self.height = 20
+        self.width = 30
         self.window = stdscr.subwin(self.height, self.width, begin_y, begin_x)
         self.w_backpack = (1, 2)
         self.w_weapon = (self.w_backpack[0] + 1, self.w_backpack[1])
@@ -12,7 +15,10 @@ class InterfaceBackpack:
 
     def show_panel(self):
         self.window.clear()
-        self.window.addstr(self.w_backpack[0], self.w_backpack[1], 'Рюкзак')
+        self.window.attron(curses.A_REVERSE)
+        self.window.addstr(self.w_backpack[0], self.w_backpack[1], f'Рюкзак{' ' * (self.width - 10)}')
+        self.window.attroff(curses.A_REVERSE)
+
         self.window.addstr(self.w_weapon[0], self.w_weapon[1], 'Оружие (h)')
         self.window.addstr(self.w_food[0], self.w_food[1], 'Еда (j)')
         self.window.addstr(self.w_elixir[0], self.w_elixir[1], 'Эликсир (k)')
@@ -21,6 +27,7 @@ class InterfaceBackpack:
         self.window.noutrefresh()
 
     def show_current_items(self, item_type, items_list):
+        self.show_panel()
         if item_type == 'weapon':
             start_y, start_x = self.w_weapon
             start_index = 0

@@ -23,7 +23,11 @@ class RulesWindow:
         self.win.erase()
         self.win.box()
         title = 'Управление'
-        self.win.addstr(1, (self.width - len(title)) // 2, title)
+        self.win.attron(curses.A_REVERSE)
+        self.win.addstr(1, 1, ' '*5+title+' '*4)
+        self.win.attroff(curses.A_REVERSE)
+
+
 
         for btn in (self.btn_w, self.btn_a, self.btn_s, self.btn_d):
             btn.erase()
