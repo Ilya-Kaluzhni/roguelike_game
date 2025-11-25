@@ -31,7 +31,8 @@ class RenderingActors:
             'G': 30,
             'O': 35,
             'V': 31,
-            'S': 30
+            'S': 30,
+            'm': 30
         }
 
         self.items = []
