@@ -1,5 +1,5 @@
 class GameMap:
-    def __init__(self, width, height):
+    def __init__(self):
         self.width = 80
         self.height = 25
         self.max_vision_distance = 6
@@ -122,8 +122,6 @@ class GameMap:
         self.reset_visibility()
         # Текущая комната, делаем видимой, помещаем в исследованные
         player_room_id = self.find_room_id(player_x, player_y)
-        with open('d.log', 'a') as f:
-            f.write(f'\n{player_room_id}\n')
         if player_room_id is not None:
             for x, y in self.rooms[player_room_id]['cells']:
                 self.visible[y][x] = True
@@ -155,8 +153,10 @@ class GameMap:
                         if self.tiles[y][x] == '#':
                             self.visible[y][x] = True
 
-    def get_tile_display(self, x, y, player_x, player_y):
+    def get_tile_display(self, x, y):
         if self.visible[y][x]:
+            if not self.explored[y][x] and self.tiles[y][x] == '.':
+                return ','
             return self.tiles[y][x]
         elif self.explored[y][x] and self.tiles[y][x] in ('#', '+'):
             return self.tiles[y][x]

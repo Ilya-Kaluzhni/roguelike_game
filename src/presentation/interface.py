@@ -1,10 +1,10 @@
-import curses
+
 
 
 class InterfaceBackpack:
     def __init__(self, stdscr, height=15, width=20, begin_y=0, begin_x=0):
-        self.window = curses.newwin(height, width, begin_y, begin_x)
-        self.w_backpack = (1, 1)
+        self.window = stdscr.subwin(height, width, begin_y, begin_x)
+        self.w_backpack = (1, 2)
         self.w_weapon = (self.w_backpack[0] + 1, self.w_backpack[1])
         self.w_food = (self.w_weapon[0] + 1, self.w_weapon[1])
         self.w_elixir = (self.w_food[0] + 1, self.w_food[1])

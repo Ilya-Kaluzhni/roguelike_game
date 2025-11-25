@@ -2,7 +2,7 @@ import curses
 
 
 class RulesWindow:
-    def __init__(self, stdscr,  screen_height,screen_width):
+    def __init__(self, stdscr, screen_height, screen_width):
         self.height = 15
         self.width = 21
         self.start_y = screen_height
