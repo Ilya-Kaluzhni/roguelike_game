@@ -10,3 +10,5 @@ class Keys(Enum):
     J_USE_FOOD = (74, 106)  # J и j
     K_USE_ELIXIR = (75, 107)  # K и k
     E_USE_SCROLL = (69, 101) # E и e
+
+    Q_CLOSE = (81, 113)

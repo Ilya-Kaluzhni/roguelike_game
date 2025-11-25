@@ -71,6 +71,11 @@ class RulesWindow:
         self.current_key = key_char
         self._draw_button(getattr(self, f'btn_{key_char.lower()}'), key_char, active=True)
 
+    def clear(self):
+        if self.current_key:
+            key_char = self.current_key
+            self._draw_button(getattr(self, f'btn_{key_char.lower()}'), key_char, active=False)
+
 
 # def main(stdscr):
 #     curses.curs_set(0)

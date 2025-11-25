@@ -160,15 +160,16 @@ def main(stdscr):
         while True:
 
             key = stdscr.getch()
+            win_message.clear()
 
             if key == 0x1B:
                 break
             if message:
                 win_message.draw_line(message)
-            else:
-                win_message.clear()
-            if key == ord('q'):
+
+            if key in Keys.Q_CLOSE.value:
                 win_backpack.show_panel()
+                win_rules.clear()
             elif key in Keys.W_UP.value:
                 player_pos = (player_pos[0], max(0, player_pos[1] - 1))
                 win_game.update(player_pos, monsters, items)
@@ -190,15 +191,19 @@ def main(stdscr):
                 win_rules.press_btn(key)
             elif key in Keys.H_USE_WEAPON.value:
                 win_backpack.show_current_items('weapon', weapons)
+                win_rules.clear()
                 # controller.get_input_give_update(Keys.H_USE_WEAPON)
             elif key in Keys.J_USE_FOOD.value:
                 win_backpack.show_current_items('food', foods)
+                win_rules.clear()
                 # controller.get_input_give_update(Keys.J_USE_FOOD)
             elif key in Keys.K_USE_ELIXIR.value:
                 win_backpack.show_current_items('elixir', elixirs)
+                win_rules.clear()
                 # controller.get_input_give_update(Keys.K_USE_ELIXIR)
             elif key in Keys.E_USE_SCROLL.value:
                 win_backpack.show_current_items('scroll', scrolls)
+                win_rules.clear()
                 # controller.get_input_give_update(Keys.E_USE_SCROLL)
             curses.doupdate()
             # message = ''
