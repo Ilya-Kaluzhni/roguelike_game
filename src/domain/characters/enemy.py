@@ -52,7 +52,7 @@ class Enemy:
 
     def presentation_data(self):
         return {
-            'letter': self.view['letter'],
+            'type': self.view['letter'],
             'color': self.view['color'],
             'x': self.x,
             'y': self.y
