@@ -1,0 +1,58 @@
+class Item:
+    """
+    Универсальный предмет игры.
+    """
+
+    def __init__(
+        self,
+        item_type: str,       # weapon / food / potion / scroll / treasure
+        subtype: str,         # название: "яблоко", "меч", "эликсир здоровья"
+        health: int = 0,      # +HP при использовании
+        max_health: int = 0,  # +макс HP
+        dexterity: int = 0,   # +ловкость
+        strength: int = 0,    # +сила
+        value: int = 0        # золото (treasure)
+    ):
+        self.item_type = item_type
+        self.subtype = subtype
+
+        self.health = health
+        self.max_health = max_health
+        self.dexterity = dexterity
+        self.strength = strength
+
+        self.value = value
+
+    # ----------------------------------------
+    # ЛОГИКА ИСПОЛЬЗОВАНИЯ ПРЕДМЕТА
+    # ----------------------------------------
+
+    def apply_to_character(self, character):
+        """
+        Накладывает эффект предмета на персонажа.
+        Возвращает строку для UI.
+        """
+
+        messages = []
+
+        if self.health:
+            character.health = min(character.health + self.health, character.max_health)
+            messages.append(f"+{self.health} HP")
+
+        if self.max_health:
+            character.max_health += self.max_health
+            character.health += self.max_health
+            messages.append(f"+{self.max_health} макс. HP")
+
+        if self.dexterity:
+            character.dexterity += self.dexterity
+            messages.append(f"+{self.dexterity} ловкости")
+
+        if self.strength:
+            character.strength += self.strength
+            messages.append(f"+{self.strength} силы")
+
+        if not messages:
+            return "Этот предмет ничего не сделал."
+
+        return ", ".join(messages)

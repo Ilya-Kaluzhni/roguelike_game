@@ -1,4 +1,4 @@
-# src/core/game/session.py
+# /Users/ilya/roguelike_game/src/domain/game/session.py
 
 from src.core.entities.character import Character
 from src.core.map_generate.map_generate import MapGenerator

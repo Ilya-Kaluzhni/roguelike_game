@@ -1,4 +1,4 @@
-# src/core/game/loop.py
+# /Users/ilya/roguelike_game/src/domain/game/loop.py
 
 from core.game.session import GameSession
 from core.movement.directions import Directions
