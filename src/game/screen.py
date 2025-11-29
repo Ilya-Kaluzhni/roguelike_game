@@ -62,10 +62,10 @@ def create_data_windows(stdscr):
 
     return win_message, win_rules, win_game, win_backpack, win_stats
 
-
 def main(stdscr):
     with open('a.log', 'a') as f:
         f.write('Начало\n')
+
     curses.curs_set(0)
     start_screen = StartScreen(stdscr)
     next_step = start_screen.screen()
@@ -73,118 +73,114 @@ def main(stdscr):
     if next_step == MenuId.EXIT.value:
         return
 
-    # --- Игровые данные ---
-    player_stats = {
-        "level": 5,
-        "current_health": 35,
-        "max_health": 50,
-        "strength": 8,
-        "gold": 120
-    }
-    items = [
-        {'x': 7, 'y': 5, 'type': 'w'},
-        {'x': 21, 'y': 6, 'type': 'f'},
-        {'x': 6, 'y': 14, 'type': 'e'},
-        {'x': 8, 'y': 15, 'type': 's'},
-        {'x': 8, 'y': 6, 'type': 't'},
-    ]
-    # monsters = [
-    #     {'x': 10, 'y': 7, 'type': 'G'},
-    #     {'x': 38, 'y': 17, 'type': 'O'},
-    #     {'x': 23, 'y': 15, 'type': 'S'},
-    #     {'x': 27, 'y': 4, 'type': 'V'},
-    #     {'x': 40, 'y': 7, 'type': 'Z'},
-    # ]
-    weapons = ["Короткий меч", "Длинный меч", "Боевой топор", "Кинжал", "Лук", "Боевой молот"]
-    foods = ["Хлеб", "Яблоко", "Мясо", "Сыр", "Ягоды", "Рыба"]
-    elixirs = ["Эликсир исцеления", "Мана эликсир", "Сила зверя", "Стойкость к огню", "Зелье ночного зрения"]
-    scrolls = ["Свиток огненного шара", "Свиток телепортации", "Свиток невидимости", "Свиток защиты", "Свиток обнаружения ловушек"]
-    message = 'Сообщение из бэка(при необходимости)'
-
+    # создаём окна интерфейса
     win_message, win_rules, win_game, win_backpack, win_stats = create_data_windows(stdscr)
 
-    # --- Генерация карты через MapGenerator ---
-    # generator = MapGenerator()
-    # rooms_ui, corridors_ui, rooms_cells, corridors_cells = generator.generate_level()
-
-    game_map = GameMap()
+    # --- Генерация карты через контроллер ---
     controller = Controller()
     data = controller.get_input_give_update('start')
+
     with open('d.log', 'a') as f:
         f.write(str(data))
+
+    # создаём карту
+    game_map = GameMap()
     game_map.add_rooms(data['rooms'])
     game_map.add_corridors(data['corridors'])
-    player_pos = data['player']['cords']
+    game_map.place_items()                    # ← размещаем предметы
+
+    # игровые данные
+    player_pos   = data['player']['cords']
     player_stats = data['player']
-    monsters = data['enemies']
-    message = data['message']
+    monsters     = data['enemies']
+    message      = data['message']
+
+    # ВАЖНО! Передаём предметы из карты:
+    items = game_map.get_render_items()                    # ← теперь предметы ВСЕГДА корректные
+    with open('items.log', 'a') as f:
+        f.write(str(items) + "\n")
+    # передаем всё в renderer
     win_game.setup_game_objects(game_map, player_pos, monsters, items)
 
+    # справочники для инвентаря
+    weapons = ["Короткий меч", "Длинный меч", "Боевой топор", "Кинжал", "Лук", "Боевой молот"]
+    foods   = ["Хлеб", "Яблоко", "Мясо", "Сыр", "Ягоды", "Рыба"]
+    elixirs = ["Эликсир исцеления", "Мана эликсир", "Сила зверя", "Стойкость к огню", "Зелье ночного зрения"]
+    scrolls = ["Свиток огненного шара", "Свиток телепортации", "Свиток невидимости", "Свиток защиты", "Свиток обнаружения ловушек"]
+
     if next_step == MenuId.NEW_GAME.value:
+
         win_rules.draw_controls()
-        win_game.update(player_pos, monsters, items)
         win_backpack.show_panel()
         win_stats.draw_stats(player_stats)
-        width, height = 80, 25
+
+        # первый рендер
+        win_game.update(player_pos, monsters, items)
         curses.doupdate()
 
         while True:
-
             key = stdscr.getch()
             if key == -1:
                 continue
+
             win_message.clear()
+
             data = controller.get_input_give_update(key)
-            player_pos = data['player']['cords']
+            player_pos   = data['player']['cords']
             player_stats = data['player']
-            monsters = data['enemies']
-            message = data['message']
-            if key == 0x1B:
+            monsters     = data['enemies']
+            message      = data['message']
+
+            # ВСЕГДА обновляем предметы динамически
+            items = game_map.get_render_items()
+            win_game.update(player_pos, monsters, items)
+
+            if key == 0x1B:      # Esc
                 break
+
             if message:
                 win_message.draw_line(message)
 
+            # управление
             if key in Keys.Q_CLOSE.value:
                 win_backpack.show_panel()
                 win_rules.clear()
+
             elif key in Keys.W_UP.value:
-                # player_pos = (player_pos[0], max(0, player_pos[1] - 1))
                 win_game.update(player_pos, monsters, items)
                 win_rules.press_btn(key)
-                # controller.get_input_give_update(Keys.W_UP)
+
             elif key in Keys.A_LEFT.value:
-                # player_pos = (max(0, player_pos[0] - 1), player_pos[1])
                 win_game.update(player_pos, monsters, items)
                 win_rules.press_btn(key)
-                # controller.get_input_give_update(Keys.A_LEFT)
+
             elif key in Keys.S_DOWN.value:
-                # player_pos = (player_pos[0], min(height - 1, player_pos[1] + 1))
                 win_game.update(player_pos, monsters, items)
                 win_rules.press_btn(key)
-                # controller.get_input_give_update(Keys.S_DOWN)
+
             elif key in Keys.D_RIGHT.value:
-                # player_pos = (min(width - 1, player_pos[0] + 1), player_pos[1])
                 win_game.update(player_pos, monsters, items)
                 win_rules.press_btn(key)
+
+            # инвентарь
             elif key in Keys.H_USE_WEAPON.value:
                 win_backpack.show_current_items('weapon', weapons)
                 win_rules.clear()
-                # controller.get_input_give_update(Keys.H_USE_WEAPON)
+
             elif key in Keys.J_USE_FOOD.value:
                 win_backpack.show_current_items('food', foods)
                 win_rules.clear()
-                # controller.get_input_give_update(Keys.J_USE_FOOD)
+
             elif key in Keys.K_USE_ELIXIR.value:
                 win_backpack.show_current_items('elixir', elixirs)
                 win_rules.clear()
-                # controller.get_input_give_update(Keys.K_USE_ELIXIR)
+
             elif key in Keys.E_USE_SCROLL.value:
                 win_backpack.show_current_items('scroll', scrolls)
                 win_rules.clear()
-                # controller.get_input_give_update(Keys.E_USE_SCROLL)
+
             win_stats.draw_stats(player_stats)
             curses.doupdate()
-            # message = ''
 
     elif next_step == MenuId.OLD_GAME.value:
         pass
