@@ -11,6 +11,17 @@ class GameMap:
         # ДОБАВЛЕНО
         self.items_on_map = {}  # координата → Item
 
+    def take_item_at(self, x, y):
+        """
+        Возвращает предмет с клетки (если есть) и удаляет его с карты.
+        """
+        if (x, y) in self.items_on_map:
+            item = self.items_on_map[(x, y)]
+            del self.items_on_map[(x, y)]
+            return item
+
+        return None
+
     #
     def add_rooms(self, rooms):
         for room_id, room_data in enumerate(rooms):

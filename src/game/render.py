@@ -5,6 +5,7 @@ import curses
 
 class RenderingActors:
     def __init__(self, stdscr, start_y=0, start_x=0):
+        self.player = None
         self.height = 25
         self.width = 80
         self.window = stdscr.subwin(self.height, self.width, start_y, start_x)
@@ -37,12 +38,12 @@ class RenderingActors:
 
         self.items = []
         self.items_data = {
-            'w': [31, curses.ACS_UARROW],
-            'f': [32, '♣'],
-            'e': [33, curses.ACS_PLMINUS],
-            's': [34, curses.ACS_DIAMOND],
-            't': [35, '*'],
-            'p': [33, '!']
+            'w': [31, 'w'], # оружие
+            'f': [32, '♣'], # еда
+            'e': [33, curses.ACS_PLMINUS], # эликсир
+            's': [34, curses.ACS_DIAMOND], # сокровище
+            't': [35, '*'], # свиток
+            'p': [33, '!'] # специальный предмет
         }
 
     def setup_game_objects(self, game_map, player_coords, monsters=None, items=None):
@@ -97,9 +98,32 @@ class RenderingActors:
         self.draw_actors()
         self.window.noutrefresh()
 
+    # def update(self, player_coords, monsters=None, items=None):
+    #     self.player_x, self.player_y = player_coords
+    #     self.monsters = monsters or []
+    #     self.items = items or []  # ← вот это обязательно
+    #     self.game_map.update_visibility(self.player_x, self.player_y)
+    #     self.render()
     def update(self, player_coords, monsters=None, items=None):
         self.player_x, self.player_y = player_coords
         self.monsters = monsters or []
-        self.items = items or []  # ← вот это обязательно
+
+        # --- ПОДБОР ПРЕДМЕТА ---
+        item = self.game_map.take_item_at(self.player_x, self.player_y)
+        if item:
+            # Добавляем в рюкзак
+            message = self.player.backpack.add_item(item)
+
+            # Если есть окно сообщений — выводим
+            if hasattr(self, "message_window"):
+                self.message_window.add_message(message)
+
+        # Обновляем список предметов для рендера
+        self.items = [
+            {"x": x, "y": y, "type": it.item_type[0]}
+            for (x, y), it in self.game_map.items_on_map.items()
+        ]
+
         self.game_map.update_visibility(self.player_x, self.player_y)
         self.render()
+

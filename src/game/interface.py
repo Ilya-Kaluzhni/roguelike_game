@@ -47,6 +47,13 @@ class InterfaceBackpack:
         self.window.border()
         self.window.noutrefresh()
 
+    def handle_key(self, key, player, item_type):
+        # клавиши '1'...'9'
+        if ord('1') <= key <= ord('9'):
+            index = key - ord('1')  # т.к. интерфейс показывает "1. Яблоко" → индекс 0
+            result = player.backpack.use_item(index, player, item_type)
+            return result
+        return None
 # def main(stdscr):
 #     interface = InterfaceBackpack(stdscr, height=15, width=40, begin_y=2, begin_x=2)
 #     weapons = ['Кинжал', 'Меч', 'Лук']

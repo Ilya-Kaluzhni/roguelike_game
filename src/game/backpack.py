@@ -17,6 +17,7 @@ class Backpack:
 
         # Список выбранного типа предметов — под использование
         self.current_item_list = []
+        self.current_type = None
 
     # ----------------------------------------
     # ДОБАВЛЕНИЕ ПРЕДМЕТА
@@ -35,19 +36,20 @@ class Backpack:
         if item.item_type not in self.items:
             return f"Неизвестный тип предмета: {item.item_type}"
 
-        target_list = self.items[item.item_type]
+        target = self.items[item.item_type]
 
         # Лимиты
-        limit = (
-            self.max_capacity_weapon
-            if item.item_type == "weapon"
-            else self.max_capacity
-        )
+        # limit = (
+        #     self.max_capacity_weapon
+        #     if item.item_type == "weapon"
+        #     else self.max_capacity
+        # )
+        limit = self.max_capacity_weapon if item.item_type == "weapon" else self.max_capacity
 
-        if len(target_list) >= limit:
-            return f"Раздел '{item.item_type}' заполнен"
+        if len(target) >= limit:
+            return f"Раздел '{item.item_type}' заполнен!"
 
-        target_list.append(item)
+        target.append(item)
         return f"{item.subtype} добавлен в рюкзак"
 
     # ----------------------------------------
@@ -55,10 +57,18 @@ class Backpack:
     # ----------------------------------------
 
     def get_items(self, item_type):
-        """
-        Возвращает список предметов типа.
-        И сохраняет его в current_item_list, чтобы можно было использовать.
-        """
-
+        self.current_type = item_type
         self.current_item_list = self.items.get(item_type, [])
         return self.current_item_list
+
+    def use_item(self, index, character, item_type):
+        items_list = self.items.get(item_type, [])
+        if not items_list:
+            return "Нет предметов"
+
+        if index < 0 or index >= len(items_list):
+            return "Неверный индекс"
+
+        item = items_list.pop(index)  # удаляем из оригинального списка
+        result = item.apply_to_character(character)
+        return f"Использован {item.subtype}: {result}"

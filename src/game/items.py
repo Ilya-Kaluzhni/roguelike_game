@@ -23,6 +23,11 @@ class Item:
 
         self.value = value
 
+    def __str__(self):
+        return self.subtype
+
+    def __repr__(self):
+        return self.subtype
     # ----------------------------------------
     # ЛОГИКА ИСПОЛЬЗОВАНИЯ ПРЕДМЕТА
     # ----------------------------------------

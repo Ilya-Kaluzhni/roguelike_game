@@ -3,6 +3,8 @@ import curses
 from curses import wrapper
 
 from controller import Controller
+from character import Character
+from backpack import Backpack
 # from controller import Controller
 from start_menu import StartScreen
 from rules import RulesWindow
@@ -95,18 +97,31 @@ def main(stdscr):
     monsters     = data['enemies']
     message      = data['message']
 
+    # Создаём игрока
+    player = Character(
+        cord_x=player_pos[0],
+        cord_y=player_pos[1],
+        backpack=Backpack()
+    )
+
+    # обновляем характеристики игрока из сохранённого состояния
+    # player.health = player_stats["current_health"]
+    # player.max_health = player_stats["max_health"]
+    # player.strength = player_stats["strength"]
+
     # ВАЖНО! Передаём предметы из карты:
     items = game_map.get_render_items()                    # ← теперь предметы ВСЕГДА корректные
     with open('items.log', 'a') as f:
         f.write(str(items) + "\n")
+    win_game.player = player
     # передаем всё в renderer
     win_game.setup_game_objects(game_map, player_pos, monsters, items)
 
     # справочники для инвентаря
-    weapons = ["Короткий меч", "Длинный меч", "Боевой топор", "Кинжал", "Лук", "Боевой молот"]
-    foods   = ["Хлеб", "Яблоко", "Мясо", "Сыр", "Ягоды", "Рыба"]
-    elixirs = ["Эликсир исцеления", "Мана эликсир", "Сила зверя", "Стойкость к огню", "Зелье ночного зрения"]
-    scrolls = ["Свиток огненного шара", "Свиток телепортации", "Свиток невидимости", "Свиток защиты", "Свиток обнаружения ловушек"]
+    #weapons = ["Короткий меч", "Длинный меч", "Боевой топор", "Кинжал", "Лук", "Боевой молот"]
+    #foods   = ["Хлеб", "Яблоко", "Мясо", "Сыр", "Ягоды", "Рыба"]
+    #elixirs = ["Эликсир исцеления", "Мана эликсир", "Сила зверя", "Стойкость к огню", "Зелье ночного зрения"]
+    #scrolls = ["Свиток огненного шара", "Свиток телепортации", "Свиток невидимости", "Свиток защиты", "Свиток обнаружения ловушек"]
 
     if next_step == MenuId.NEW_GAME.value:
 
@@ -164,20 +179,40 @@ def main(stdscr):
 
             # инвентарь
             elif key in Keys.H_USE_WEAPON.value:
-                win_backpack.show_current_items('weapon', weapons)
+                current_item_type = 'weapon'
+                items_to_show = player.get_items_by_type('weapon')
+                win_backpack.show_current_items('weapon', items_to_show)
+                #win_backpack.show_current_items('weapon', weapons)
                 win_rules.clear()
 
             elif key in Keys.J_USE_FOOD.value:
-                win_backpack.show_current_items('food', foods)
+                current_item_type = 'food'
+                items_to_show = player.get_items_by_type('food')
+                win_backpack.show_current_items('food', items_to_show)
+                #win_backpack.show_current_items('food', foods)
                 win_rules.clear()
 
             elif key in Keys.K_USE_ELIXIR.value:
-                win_backpack.show_current_items('elixir', elixirs)
+                current_item_type = 'elixir'
+                items_to_show = player.get_items_by_type('elixir')
+                win_backpack.show_current_items('elixir', items_to_show)
+                #win_backpack.show_current_items('elixir', elixirs)
                 win_rules.clear()
 
             elif key in Keys.E_USE_SCROLL.value:
-                win_backpack.show_current_items('scroll', scrolls)
+                current_item_type = 'scroll'
+                items_to_show = player.get_items_by_type('scroll')
+                win_backpack.show_current_items('scroll', items_to_show)
+                #win_backpack.show_current_items('scroll', scrolls)
                 win_rules.clear()
+
+            if ord('0') <= key <= ord('9'):
+                result = win_backpack.handle_key(key, player, current_item_type)
+                if result:
+                    win_message.draw_line(result)
+                    win_stats.draw_stats(player.presentation_data())
+                    curses.doupdate()
+                    continue
 
             win_stats.draw_stats(player_stats)
             curses.doupdate()

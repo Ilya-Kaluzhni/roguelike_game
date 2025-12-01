@@ -31,7 +31,7 @@ class Character:
         return self.backpack.add_item(item)
 
     def get_items_by_type(self, item_type):
-        return self.backpack.get_list_of_item(item_type)
+        return self.backpack.get_items(item_type)
 
     def select_weapon(self, index):
         weapons = self.backpack.get_items('weapon')
@@ -42,17 +42,20 @@ class Character:
         self.current_weapon = weapons[index]
         return f'Вы выбрали оружие: {self.current_weapon.name}'
 
-    def use_item(self, index, effect_processor):
-        items_list = self.backpack.current_item_list
-        if not items_list:
-            return "У вас нет ничего"
+    # def use_item(self, index, effect_processor):
+    #     items_list = self.backpack.current_item_list
+    #     if not items_list:
+    #         return "У вас нет ничего"
+    #
+    #     if index >= len(index):
+    #         return f"Выберите индекс из 0 по {len(items_list) - 1}"
+    #
+    #     item = items_list.pop(index)
+    #     result = effect_processor.apply_item(self, item)
+    #     return result
 
-        if index >= len(index):
-            return f"Выберите индекс из 0 по {len(items_list) - 1}"
-
-        item = items_list.pop(index)
-        result = effect_processor.apply_item(self, item)
-        return result
+    def use_item(self, index):
+        return self.backpack.use_item(index, self)
 
     def presentation_data(self):
         level = (self.health - 30) // 10 if self.health > 40 else 1
