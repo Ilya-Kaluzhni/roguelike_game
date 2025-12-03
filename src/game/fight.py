@@ -1,4 +1,5 @@
-from random import randint, random
+from random import randint, random,choice
+# from secrets import choice
 
 
 class Fight:
@@ -29,7 +30,7 @@ class Fight:
             chance += (self.player.dexterity - self.monster.dexterity - self.standard_dexterity) * self.dexterity_factor
         else:
             chance += (self.monster.dexterity - self.player.dexterity - self.standard_dexterity) * self.dexterity_factor
-        if random() < chance or self.monster.type == 'ogre':
+        if random() * 100 < chance or self.monster.type == 'ogre':
             return True
         return False
 
@@ -74,22 +75,31 @@ class Fight:
             log.write(f'{self.turn_player}\n')
         if self.turn_player:
             if self.check_hit():
-                self.monster.health -= self.calculate_damage()
-                message = 'Удар по монстру'
+                damage = self.calculate_damage()
+                self.monster.health -= damage
+                message = f'Вы нанесли монстру {damage} урона'
+                with open('fight.log', 'a') as log:
+                    log.write(f'Зашел\n')
             else:
-                message = 'Промах по монстру'
+                message = 'К сожалению, вы промахнулись!'
+                with open('fight.log', 'a') as log:
+                    log.write(f'Не зашел\n')
             if self.monster.health <= 0:
                 self.player.backpack.treasure += int(self.calculate_loot())
                 self.player.bit_enemy += 1
-                message = 'Победа'
+                message = 'Вы победили монстра!'
+            self.next_turn()
         else:
             if self.check_hit():
-                self.player.health -= self.calculate_damage()
-                message = 'Удар по персу'
+                damage = self.calculate_damage()
+                self.player.health -= damage
+                message = f' Монстер нанес вам {damage} урона!'
+                with open('fight.log', 'a') as log:
+                    log.write(f'Зашел\n')
             else:
-                message = 'Промах по персу'
-        message += f'{self.monster.health}, {self.player.health}'
-        self.next_turn()
+                message = ' Вы увернулись от монстра!'
+                with open('fight.log', 'a') as log:
+                    log.write(f'Не зашел\n')
         return message
 
     def set_turn_monster(self):
@@ -112,10 +122,13 @@ class Fight:
     def player_action(self, new_cords):
         monster_cords = self.monster.get_cords()
         if new_cords == monster_cords:
+            self.set_turn_player()
             message = self.attack()
         else:
-            # Движение (отход) — передаем ход монстру
             self.turn_player = False
-            message = "Игрок отступил. Ход монстра."
+            if not self.player_first_attack:
+                message = choice(["Вы решили быть пацифистом.", "Вы убегаете от монстра."])
+            else:
+                message = 'Нападение!'
 
         return message

@@ -13,6 +13,7 @@ class MapGenerator:
         self.tiles = []
         self.rooms_ui = []
         self.corridors_ui = []
+        self.start_room = 0
         if seed is not None:
             random.seed(seed)
 
@@ -29,8 +30,14 @@ class MapGenerator:
                 return room_x, room_y, room_width, room_height
         return 0
 
-    def get_room_inner_size(self, x, y):
-        for room in self.rooms_ui:
+    def set_player_cords(self,):
+        cords = self.rooms_ui[self.start_room]
+        cord_x = random.randint(cords['x'] + 1, cords['x'] + cords['width'] - 2)
+        cord_y = random.randint(cords['y']+ 1 , cords['y'] + cords['height'] - 2)
+        return cord_x, cord_y
+
+    def can_set_smth(self, x, y):
+        for i, room in enumerate(self.rooms_ui):
             room_x, room_y = room['x'], room['y']
             room_width, room_height = room['width'], room['height']
 
@@ -39,8 +46,9 @@ class MapGenerator:
             inner_x2 = room_x + room_width - 1
             inner_y2 = room_y + room_height - 1
 
-            if (inner_x1 <= x < inner_x2 and
-                    inner_y1 <= y < inner_y2):
+            if inner_x1 <= x < inner_x2 and inner_y1 <= y < inner_y2:
+                if i == self.start_room:
+                    return False
                 return True
 
         return False
@@ -78,7 +86,7 @@ class MapGenerator:
     def generate_level(self):
         rooms_ui = self._generate_rooms()
         corridors_ui = self._generate_corridors(rooms_ui)
-
+        self.start_room = random.randint(0, 8)
         # --- преобразуем в клетки для GameMap ---
         rooms_cells = []
         for r in rooms_ui:

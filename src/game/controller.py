@@ -7,8 +7,6 @@ class Controller:
         self.back = GameController()
 
     def get_input_give_update(self, input_key):
-        # with open('d.log', 'a') as f:
-        #     f.write('Зашел в контроллер\n')
         if input_key in Keys.W_UP.value:
             input_key = Keys.W_UP
         elif input_key in Keys.S_DOWN.value:

@@ -43,13 +43,8 @@ class GameController:
         # ---- теперь всё правильно ----
         self.level = self.game_map.generate_level()
         self.move_enemy = MoveEnemy(self.game_map)
-        # selmf.move_enemy = MoveEnemy(self.level)
-        # rooms_ui, corridors_ui, rooms_cells, corridors_cells = generator.generate_level()
-        # Берём центр стартовой комнаты
-        # start_x, start_y = self.level.start_room.center()
-        self.character.set_cords(10, 5)
-        # self.level.take(player_cords)
-        # Опционально — создание врагов
+
+        self.character.set_cords(*self.game_map.set_player_cords())
         self.enemies = self.spawn_enemies()
         self.battles = [None] * len(self.enemies)
         with open('d.log', 'a') as f:
@@ -58,7 +53,7 @@ class GameController:
     def spawn_enemies(self):
         """Создаёт врагов в случайных комнатах."""
         if self.n_level == 1:
-            enemy_types = [Mimic, Ghost]
+            enemy_types = [Ogre, Ghost]
         elif 2 <= self.n_level < 4:
             enemy_types = [Mimic, Zombie, Ogre]
         elif 4 <= self.n_level <= 6:
@@ -72,7 +67,7 @@ class GameController:
         enemies = []
         while num_enemies:
             cell = choice(self.level[2])
-            if self.game_map.get_room_inner_size(*cell):
+            if self.game_map.can_set_smth(*cell):
                 with open('d.log', 'a') as f:
                     f.write(str(cell) + '\n')
                 enemy_class = choice(enemy_types)
@@ -164,21 +159,15 @@ class GameController:
         # --------------------------
         # 7. Обрабатываем бои
         # --------------------------
-        message = ''
+        self.message = ''
         for battle in self.battles:
             if battle is None:
                 continue
 
-            # если игрок рядом → его ход
-            if battle.monster.get_cords() == (new_x, new_y):
-                battle.set_turn_player()
-                message = battle.attack()
-
-            # если монстр жив — его ответный ход
+            self.message += battle.player_action((new_x, new_y))
             if self.check_monster_alive(battle.monster):
-                message = battle.attack()
+                self.message += battle.attack()
             else:
-                # монстр мёртв → качаем игрока
                 self.character.update_level()
 
         # --------------------------
