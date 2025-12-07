@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class Keys(Enum):
     W_UP = (87, 119)  # W и w
     A_LEFT = (65, 97)  # A и a
@@ -9,8 +10,9 @@ class Keys(Enum):
     H_USE_WEAPON = (72, 104)  # H и h
     J_USE_FOOD = (74, 106)  # J и j
     K_USE_ELIXIR = (75, 107)  # K и k
-    E_USE_SCROLL = (69, 101) # E и e
+    E_USE_SCROLL = (69, 101)  # E и e
 
+    P_GO_3D = (80, 51, 70, 112)
     Q_CLOSE = (81, 113)
 
     INDEX_0 = 48
@@ -23,7 +25,6 @@ class Keys(Enum):
     INDEX_7 = 55
     INDEX_8 = 56
     INDEX_9 = 57
-
 
 
 class Directions(Enum):
@@ -48,6 +49,7 @@ class Directions(Enum):
             cls.DIAGONALLY_DOWN_LEFT,
             cls.DIAGONALLY_DOWN_RIGHT
         ]
+
 
 class DetectionRange(Enum):
     LOW = 2

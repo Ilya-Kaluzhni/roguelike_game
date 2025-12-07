@@ -9,7 +9,7 @@ class MessageWindow:
     def draw_line(self, text):
         self.window.erase()
         # Ограничиваем длину текста шириной окна
-        display_text = text[:self.width]
+        display_text = text[:self.width - 2]
         self.window.addstr(0, 0, display_text)
         self.window.noutrefresh()
 

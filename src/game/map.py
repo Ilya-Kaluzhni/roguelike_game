@@ -63,37 +63,6 @@ class GameMap:
                         self.tiles[row][col] = '+'
             self.corridors.append({'x': x, 'y': y, 'width': w, 'height': h, 'connected_rooms': connected_rooms})
 
-    def place_items(self, items_per_room=1):
-        import random
-        from items import Item
-        import items # или путь к твоему классу Item
-
-        for room in self.rooms:
-            for _ in range(items_per_room):
-                # случайная точка в комнате
-                x = random.randint(room['x'] + 1, room['x'] + room['width'] - 2)
-                y = random.randint(room['y'] + 1, room['y'] + room['height'] - 2)
-
-                # случайный предмет
-                item = random.choice([
-                    Item("food", "яблоко", health=5),
-                    Item("potion", "зелье лечения", health=15),
-                    Item("weapon", "кинжал", strength=1),
-                    Item("treasure", "монеты", value=20),
-                ])
-
-                # размещаем, если клетка свободна
-                self.items_on_map[(x, y)] = item
-
-    def get_render_items(self):
-        render_list = []
-        for (x, y), item in self.items_on_map.items():
-            render_list.append({
-                'x': x,
-                'y': y,
-                'type': item.item_type[0]  # первая буква weapon→'w', food→'f'
-            })
-        return render_list
 
     def find_room_id(self, x, y):
         for room in self.rooms:
@@ -199,23 +168,30 @@ class GameMap:
                             self.visible[y][x] = True
 
     def get_tile_display(self, x, y):
+        if self.visible[y][x]:
+            if not self.explored[y][x] and self.tiles[y][x] == '.':
+                return ','
+            return self.tiles[y][x]
+        elif self.explored[y][x] and self.tiles[y][x] in ('#', '+'):
+            return self.tiles[y][x]
+        return None
         # Если клетка невидима — всё как раньше
-        if not self.visible[y][x]:
-            if self.explored[y][x] and self.tiles[y][x] in ('#', '+'):
-                return self.tiles[y][x]
-            return None
+        # if not self.visible[y][x]:
+        #     if self.explored[y][x] and self.tiles[y][x] in ('#', '+'):
+        #         return self.tiles[y][x]
+        #     return None
 
         # ЕСЛИ ВИДИМО — проверяем предмет
-        if (x, y) in self.items_on_map:
-            item = self.items_on_map[(x, y)]
-            if item.item_type == "treasure":
-                return '$'
-            return '!'
+        # if (x, y) in self.items_on_map:
+        #     item = self.items_on_map[(x, y)]
+        #     if item.item_type == "treasure":
+        #         return '$'
+        #     return '!'
 
         # иначе возвращаем обычную плитку
-        if not self.explored[y][x] and self.tiles[y][x] == '.':
-            return ','
-        return self.tiles[y][x]
+        # if not self.explored[y][x] and self.tiles[y][x] == '.':
+        #     return ','
+        # return self.tiles[y][x]
 
     def remove_item(self, x, y):
         if (x, y) in self.items_on_map:

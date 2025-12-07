@@ -54,6 +54,7 @@ def create_data_windows(stdscr):
     win_message = MessageWindow(stdscr, start_y - 1, start_x_shift + 1)
 
     win_game = RenderingActors(stdscr, start_y, start_x_shift)
+    win_game.create_mini_window(stdscr, win_rules.height - 3, win_rules.width, start_y + win_rules.height, start_x)
 
     start_x_shift += win_game.width
     win_backpack = InterfaceBackpack(stdscr, start_y, start_x_shift)
@@ -91,31 +92,7 @@ def main(stdscr):
     message      = data['message']
     items = data['items']
 
-    # Создаём игрока
-    # player = Character(
-    #     cord_x=player_pos[0],
-    #     cord_y=player_pos[1],
-    #     backpack=Backpack()
-    # )
-
-    # обновляем характеристики игрока из сохранённого состояния
-    # player.health = player_stats["current_health"]
-    # player.max_health = player_stats["max_health"]
-    # player.strength = player_stats["strength"]
-
-    # ВАЖНО! Передаём предметы из карты:
-    # items = game_map.get_render_items()                    # ← теперь предметы ВСЕГДА корректные
-    # with open('items.log', 'a') as f:
-    #     f.write(str(items) + "\n")
-    # win_game.player = player
-    # передаем всё в renderer
     win_game.setup_game_objects(game_map, player_pos, monsters, items)
-
-    # справочники для инвентаря
-    #weapons = ["Короткий меч", "Длинный меч", "Боевой топор", "Кинжал", "Лук", "Боевой молот"]
-    #foods   = ["Хлеб", "Яблоко", "Мясо", "Сыр", "Ягоды", "Рыба"]
-    #elixirs = ["Эликсир исцеления", "Мана эликсир", "Сила зверя", "Стойкость к огню", "Зелье ночного зрения"]
-    #scrolls = ["Свиток огненного шара", "Свиток телепортации", "Свиток невидимости", "Свиток защиты", "Свиток обнаружения ловушек"]
 
     if next_step == MenuId.NEW_GAME.value:
         win_rules.draw_controls()
@@ -155,18 +132,22 @@ def main(stdscr):
                 win_rules.clear()
 
             elif key in Keys.W_UP.value:
+                win_game.set_direction('up')
                 win_game.update(player_pos, monsters, items)
                 win_rules.press_btn(key)
 
             elif key in Keys.A_LEFT.value:
+                win_game.set_direction('left')
                 win_game.update(player_pos, monsters, items)
                 win_rules.press_btn(key)
 
             elif key in Keys.S_DOWN.value:
+                win_game.set_direction('down')
                 win_game.update(player_pos, monsters, items)
                 win_rules.press_btn(key)
 
             elif key in Keys.D_RIGHT.value:
+                win_game.set_direction('right')
                 win_game.update(player_pos, monsters, items)
                 win_rules.press_btn(key)
 
@@ -194,6 +175,9 @@ def main(stdscr):
                 win_backpack.show_current_items('scroll', data['scroll'])
                 #win_backpack.show_current_items('scroll', scrolls)
                 win_rules.clear()
+            elif key in Keys.P_GO_3D.value:
+                win_game.go_tride()
+                win_game.update(player_pos, monsters, items)
 
             if ord('0') <= key <= ord('9'):
                 win_backpack.show_panel()
