@@ -27,15 +27,20 @@ class GameMap:
         for room_id, room_data in enumerate(rooms):
             x, y, w, h = room_data['x'], room_data['y'], room_data['width'], room_data['height']
             room_cells = []
+            exit_coord = room_data.get('exit')  # может быть None
             for row in range(y, y + h):
                 for col in range(x, x + w):
                     if 0 <= row < self.height and 0 <= col < self.width:
                         room_cells.append((col, row))
-                        if row == y or row == y + h - 1 or col == x or col == x + w - 1:
+                        # если это координата выхода — ставим '>'
+                        if exit_coord and (col, row) == exit_coord:
+                            self.tiles[row][col] = '>'
+                        elif row == y or row == y + h - 1 or col == x or col == x + w - 1:
                             self.tiles[row][col] = '#'
                         else:
                             self.tiles[row][col] = '.'
-            self.rooms.append({'x': x, 'y': y, 'width': w, 'height': h, 'cells': room_cells, 'id': room_id})
+            # сохраняем информацию о комнате, включая exit, id и cells
+            self.rooms.append({'x': x, 'y': y, 'width': w, 'height': h, 'cells': room_cells, 'id': room_id, 'exit': exit_coord})
 
     def add_corridors(self, corridors):
         for seg in corridors:
@@ -57,7 +62,8 @@ class GameMap:
                             if 0 <= ny < self.height and 0 <= nx < self.width:
                                 if self.tiles[ny][nx] == '#':
                                     room_id = self.find_room_id(nx, ny)
-                                    if room_id:
+                                    # previous code used "if room_id:" — пропускал room_id==0
+                                    if room_id is not None:
                                         connected_rooms.add(room_id)
                                     self.tiles[ny][nx] = '.'
                         self.tiles[row][col] = '+'
@@ -142,6 +148,10 @@ class GameMap:
                 self.explored[y][x] = True
         else:
             corridor_id = self.find_corridor_id(player_x, player_y)
+
+            # Если игрок не в комнате и не в коридоре — ничего не делаем (без ошибки)
+            if corridor_id is None:
+                return
 
             # Для коридора делаем видимыми клетки самого коридора
             corridor = self.corridors[corridor_id]

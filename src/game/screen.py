@@ -94,6 +94,8 @@ def main(stdscr):
 
     win_game.setup_game_objects(game_map, player_pos, monsters, items)
 
+    current_level = data.get('level', 1)
+
     if next_step == MenuId.NEW_GAME.value:
         win_rules.draw_controls()
         win_backpack.show_panel()
@@ -116,9 +118,20 @@ def main(stdscr):
             items = data['items']
             message      = data['message']
 
-            # ВСЕГДА обновляем предметы динамически
-            # items = game_map.get_render_items()
-            win_game.update(player_pos, monsters, items)
+            # если уровень сменился — пересобираем GameMap и перенастраиваем win_game
+            if data.get('level_changed'):
+                # создаём новый объект карты и добавляем комнаты/коридоры
+                game_map = GameMap()
+                game_map.add_rooms(data['rooms'])
+                game_map.add_corridors(data['corridors'])
+                # инициализируем видимость для нового уровня
+                game_map.update_visibility(player_pos[0], player_pos[1])
+                # повторно настраиваем объекты рендера с новой картой и позициями
+                win_game.setup_game_objects(game_map, player_pos, monsters, items)
+                current_level = data.get('level', current_level)
+            else:
+                # ВСЕГДА обновляем предметы динамически
+                win_game.update(player_pos, monsters, items)
 
             if key == 0x1B:      # Esc
                 break

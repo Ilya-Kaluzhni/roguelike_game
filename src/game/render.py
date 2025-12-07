@@ -119,15 +119,26 @@ class RenderingActors:
         for y in range(self.game_map.height):
             for x in range(self.game_map.width):
                 ch = self.game_map.get_tile_display(x, y)
-                if ch in ('#', '.', '+', ','):
-                    color = curses.color_pair(0)
-                    if ch == ',':
-                        ch = '.'
-                        color = curses.color_pair(2) | curses.A_DIM
-                    try:
-                        self.window.addch(y, x, ch, color)
-                    except curses.error:
-                        pass
+                # если клетка невидима и не исследована — пропускаем
+                if ch is None:
+                    continue
+
+                # стандартное поведение для коридора — рисуем как точку с затемнением
+                if ch == ',':
+                    draw_ch = '.'
+                    color = curses.color_pair(2) | curses.A_DIM
+                elif ch == '>':
+                    # выход на следующий уровень — желтый жирный
+                    draw_ch = '>'
+                    color = curses.color_pair(35) | curses.A_BOLD
+                else:
+                    draw_ch = ch
+                    color = curses.color_pair(2)
+
+                try:
+                    self.window.addch(y, x, draw_ch, color)
+                except curses.error:
+                    pass
 
     def draw_actors(self):
         self.draw_items()

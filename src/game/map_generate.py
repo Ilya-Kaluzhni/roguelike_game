@@ -66,6 +66,12 @@ class MapGenerator:
                     else:
                         tiles[y][x] = "#"
 
+            # если в комнате задан выход (exit) — ставим символ '>'
+            if 'exit' in room and room['exit']:
+                ex, ey = room['exit']
+                if 0 <= ex < self.width and 0 <= ey < self.height:
+                    tiles[ey][ex] = '>'
+
         for (x, y) in corridors:
             if 0 <= x < self.width and 0 <= y < self.height:
                 tiles[y][x] = ","
@@ -89,6 +95,15 @@ class MapGenerator:
         rooms_ui = self._generate_rooms()
         corridors_ui = self._generate_corridors(rooms_ui)
         self.start_room = random.randint(0, 8)
+
+        # выбираем комнату выхода, отличную от стартовой
+        possible_exits = [i for i in range(len(rooms_ui)) if i != self.start_room]
+        exit_room = random.choice(possible_exits)
+        r = rooms_ui[exit_room]
+        exit_x = random.randint(r['x'] + 1, r['x'] + r['width'] - 2)
+        exit_y = random.randint(r['y'] + 1, r['y'] + r['height'] - 2)
+        rooms_ui[exit_room]['exit'] = (exit_x, exit_y)
+
         # --- преобразуем в клетки для GameMap ---
         rooms_cells = []
         for r in rooms_ui:

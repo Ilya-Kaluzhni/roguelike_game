@@ -6,6 +6,7 @@ class Character:
     def __init__(self, cord_x, cord_y, backpack):
         self.max_health = 40
         self.health = 40
+        self.regen_limit = self.max_health  # <-- добавлено для совместимости с fight.py
         self.dexterity = 6
         self.strength = 15
         self.x = cord_x
@@ -74,6 +75,8 @@ class Character:
         if self.bit_enemy == 3:
             self.max_health += self.bit_enemy // 3 * 10
             self.health = self.max_health
+            # синхронизируем regen_limit с новым max_health
+            self.regen_limit = self.max_health
             self.bit_enemy = 0
 
 

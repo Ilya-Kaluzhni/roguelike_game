@@ -33,6 +33,7 @@ class GameController:
         self.battles = []
         self.level = None
         self.n_level = 1
+        self.level_changed = False  # флаг смены уровня
         self.load_level()
 
     def start(self):
@@ -40,8 +41,6 @@ class GameController:
 
     def load_level(self):
         """Генерирует новый уровень и размещает игрока."""
-        # generator = MapGenerator()
-
         # ---- теперь всё правильно ----
         self.level = self.game_map.generate_level()
         self.move_enemy = MoveEnemy(self.game_map)
@@ -51,6 +50,7 @@ class GameController:
 
         self.spawn_items()
         self.battles = [None] * len(self.enemies)
+        self.level_changed = False
 
     def spawn_items(self):
         num_items = 9
@@ -138,13 +138,22 @@ class GameController:
         max_x = len(self.game_map.tiles[0]) - 1
 
         if not (0 <= new_x <= max_x and 0 <= new_y <= max_y):
-            # ударились в стену карты — движение игнорируем
             return self.get_game_state()
 
-        # --------------------------
-        # 5. Проверяем, можно ли ходить на новую клетку
-        # --------------------------
         target_tile = self.game_map.tiles[new_y][new_x]
+
+        # Если игрок наступил на тайл перехода '>' — переходим на следующий уровень
+        if target_tile == '>':
+            self.n_level += 1
+            if self.n_level > 21:
+                self.message = 'Поздравляю! Вы прошли игру.'
+                return self.get_game_over_state()
+            else:
+                # генерируем следующий уровень (сохранённый рюкзак и характеристики персонажа остаются)
+                self.load_level()
+                self.level_changed = True
+                self.message = f'Вы перешли на уровень {self.n_level}'
+                return self.get_game_state()
 
         if target_tile in ('.', ',', '@'):  # '.' — пол, ',' — коридор
             self.game_map.tiles[old_y][old_x] = '.'
@@ -196,20 +205,23 @@ class GameController:
         """
         with open('d.log', 'a') as log:
             log.write(f'Итог {[e.get_cords() for e in self.enemies]}:\n')
-        # with open('items.log', 'a') as log:
-        #     for i, itt in enumerate(self.items):
-        #         log.write(f'{i}. {itt.get_cords()}: {itt.subtype}\n')
+        player_data = self.character.presentation_data()
+        # добавляем номер уровня в данные игрока, чтобы UI всегда мог его показать
+        player_data['level'] = self.n_level
+
         state = {
             "rooms": self.level[0],
             'corridors': self.level[1],
-            "player": self.character.presentation_data(),
+            "player": player_data,
             "enemies": [e.presentation_data() for e in self.enemies],
             "items": [i.presentation_data() for i in self.items],
             'weapon': self.backpack.get_weapons(),
             'food': self.backpack.get_food(),
             'elixir': self.backpack.get_potions(),
             'scroll': self.backpack.get_scrolls(),
-            "message": self.message
+            "message": self.message,
+            "level": self.n_level,
+            "level_changed": self.level_changed
         }
         return state
 
