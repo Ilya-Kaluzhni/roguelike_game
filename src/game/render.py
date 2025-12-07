@@ -5,7 +5,7 @@ import curses
 
 class RenderingActors:
     def __init__(self, stdscr, start_y=0, start_x=0):
-        self.player = None
+        # self.player = None
         self.height = 25
         self.width = 80
         self.window = stdscr.subwin(self.height, self.width, start_y, start_x)
@@ -24,8 +24,8 @@ class RenderingActors:
 
         # Игровые данные устанавливаются позднее
         self.game_map = None
-        self.player_x = None
-        self.player_y = None
+        self.player_x = 0
+        self.player_y = 0
         self.monsters = []
         self.monsters_data = {
             'Z': 32,
@@ -43,7 +43,6 @@ class RenderingActors:
             'e': [33, curses.ACS_PLMINUS], # эликсир
             's': [34, curses.ACS_DIAMOND], # сокровище
             't': [35, '*'], # свиток
-            'p': [33, '!'] # специальный предмет
         }
 
     def setup_game_objects(self, game_map, player_coords, monsters=None, items=None):
@@ -74,23 +73,28 @@ class RenderingActors:
     def draw_items(self):
         for item in self.items:
             if self.game_map.visible[item['y']][item['x']]:
-                ch = self.items_data[item['type']][1]
-                color_n = self.items_data[item['type']][0]
-                self.window.addch(item['y'], item['x'], ch, curses.color_pair(color_n))
+                self.draw_item(self.window, item, item['x'], item['y'])
+
+    def draw_item(self, win, item, x, y):
+        ch = self.items_data[item['type']][1]
+        color_n = self.items_data[item['type']][0]
+        win.addch(y, x, ch, curses.color_pair(color_n))
 
     def draw_monsters(self):
         for monster in self.monsters:
             if self.game_map.visible[monster['y']][monster['x']]:
-                ch = monster['type']
-                if ch in ['f','e','s','w']:
-                    color_n = self.items_data[ch][0]
-                    ch = self.items_data[ch][1]
+                self.draw_monster(self.window, monster, monster['x'], monster['y'])
 
-                    self.window.addch(monster['y'], monster['x'], ch, curses.color_pair(color_n))
-                else:
-                    color_n = self.monsters_data[monster['type']]
-                    self.window.addch(monster['y'], monster['x'], monster['type'], curses.color_pair(color_n))
+    def draw_monster(self, win, monster, x, y):
+        ch = monster['type']
+        if ch in ['f', 'e', 's', 'w']:
+            color_n = self.items_data[ch][0]
+            ch = self.items_data[ch][1]
 
+            win.addch(y, x, ch, curses.color_pair(color_n))
+        else:
+            color_n = self.monsters_data[monster['type']]
+            win.addch(y, x, monster['type'], curses.color_pair(color_n))
     def render(self):
         self.window.clear()
         self.window.border()
@@ -106,23 +110,24 @@ class RenderingActors:
     #     self.render()
     def update(self, player_coords, monsters=None, items=None):
         self.player_x, self.player_y = player_coords
-        self.monsters = monsters or []
+        self.monsters = monsters
+        self.items = items
 
-        # --- ПОДБОР ПРЕДМЕТА ---
-        item = self.game_map.take_item_at(self.player_x, self.player_y)
-        if item:
-            # Добавляем в рюкзак
-            message = self.player.backpack.add_item(item)
-
-            # Если есть окно сообщений — выводим
-            if hasattr(self, "message_window"):
-                self.message_window.add_message(message)
-
-        # Обновляем список предметов для рендера
-        self.items = [
-            {"x": x, "y": y, "type": it.item_type[0]}
-            for (x, y), it in self.game_map.items_on_map.items()
-        ]
+        # # --- ПОДБОР ПРЕДМЕТА ---
+        # item = self.game_map.take_item_at(self.player_x, self.player_y)
+        # if item:
+        #     # Добавляем в рюкзак
+        #     message = self.player.backpack.add_item(item)
+        #
+        #     # Если есть окно сообщений — выводим
+        #     if hasattr(self, "message_window"):
+        #         self.message_window.add_message(message)
+        #
+        # # Обновляем список предметов для рендера
+        # self.items = [
+        #     {"x": x, "y": y, "type": it.item_type[0]}
+        #     for (x, y), it in self.game_map.items_on_map.items()
+        # ]
 
         self.game_map.update_visibility(self.player_x, self.player_y)
         self.render()

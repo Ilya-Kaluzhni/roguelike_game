@@ -4,14 +4,15 @@ class Item:
     """
 
     def __init__(
-        self,
-        item_type: str,       # weapon / food / potion / scroll / treasure
-        subtype: str,         # название: "яблоко", "меч", "эликсир здоровья"
-        health: int = 0,      # +HP при использовании
-        max_health: int = 0,  # +макс HP
-        dexterity: int = 0,   # +ловкость
-        strength: int = 0,    # +сила
-        value: int = 0        # золото (treasure)
+            self,
+            item_type: str,  # weapon / food / potion / scroll / treasure
+            subtype: str,
+            letter: str,
+            health: int = 0,  # +HP при использовании
+            max_health: int = 0,  # +макс HP
+            dexterity: int = 0,  # +ловкость
+            strength: int = 0,  # +сила
+            value: int = 0  # золото (treasure)
     ):
         self.item_type = item_type
         self.subtype = subtype
@@ -20,17 +21,27 @@ class Item:
         self.max_health = max_health
         self.dexterity = dexterity
         self.strength = strength
+        self.letter = letter
 
         self.value = value
+        self.x = 0
+        self.y = 0
 
     def __str__(self):
         return self.subtype
 
     def __repr__(self):
         return self.subtype
+
     # ----------------------------------------
     # ЛОГИКА ИСПОЛЬЗОВАНИЯ ПРЕДМЕТА
     # ----------------------------------------
+    def set_cords(self, x, y):
+        self.x = x
+        self.y = y
+
+    def get_cords(self):
+        return self.x, self.y
 
     def apply_to_character(self, character):
         """
@@ -61,3 +72,10 @@ class Item:
             return "Этот предмет ничего не сделал."
 
         return ", ".join(messages)
+
+    def presentation_data(self):
+        return {
+            'type': self.letter,
+            'x': self.x,
+            'y': self.y
+        }

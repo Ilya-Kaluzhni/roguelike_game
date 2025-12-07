@@ -1,7 +1,7 @@
 class MessageWindow:
     def __init__(self, stdscr, start_y, start_x):
         self.height = 1
-        self.width = 80
+        self.width = 100
         self.window = stdscr.subwin(self.height, self.width, start_y, start_x)
         self.start_y = start_y
         self.start_x = start_x

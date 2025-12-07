@@ -14,6 +14,7 @@ from snake import Snake
 from enemy_movement import MoveEnemy
 from random import randint, choice
 from fight import Fight
+from items import Item
 
 
 class GameController:
@@ -28,6 +29,7 @@ class GameController:
         self.message = ''
         self.move_enemy = None
         self.enemies = []
+        self.items = []
         self.battles = []
         self.level = None
         self.n_level = 1
@@ -46,9 +48,26 @@ class GameController:
 
         self.character.set_cords(*self.game_map.set_player_cords())
         self.enemies = self.spawn_enemies()
+
+        self.spawn_items()
         self.battles = [None] * len(self.enemies)
-        with open('d.log', 'a') as f:
-            f.write(str([e.presentation_data() for e in self.enemies]) + '\n')
+
+    def spawn_items(self):
+        num_items = 9
+        while num_items:
+            cell = choice(self.level[2])
+            if self.game_map.can_set_smth(*cell):
+                item = choice([
+                    Item("food", "яблоко", health=5,letter='f'),
+                    Item("potion", "зелье лечения", health=15,letter='e'),
+                    Item("weapon", "кинжал", strength=1,letter='w'),
+                    Item("treasure", "монеты", value=20,letter='t'),
+                ])
+                item.set_cords(*cell)
+
+                self.game_map.tiles[cell[1]][cell[0]] = item.letter
+                self.items.append(item)
+                num_items -= 1
 
     def spawn_enemies(self):
         """Создаёт врагов в случайных комнатах."""
@@ -68,16 +87,12 @@ class GameController:
         while num_enemies:
             cell = choice(self.level[2])
             if self.game_map.can_set_smth(*cell):
-                with open('d.log', 'a') as f:
-                    f.write(str(cell) + '\n')
                 enemy_class = choice(enemy_types)
 
                 enemy = enemy_class(*cell)
                 self.game_map.tiles[cell[1]][cell[0]] = enemy.view['letter']
                 enemies.append(enemy)
                 num_enemies -= 1
-                with open('d.log', 'a') as log:
-                    log.write(f'Вот он враг{enemy.get_cords()}:\n')
         return enemies
 
     def check_monster_alive(self, current_enemy):
@@ -91,29 +106,13 @@ class GameController:
         return True
 
     def handle_input(self, player_input):
-        """Обрабатывает действие игрока."""
 
-        # --------------------------
-        # 1. Преобразуем строку → Enum
-        # --------------------------
-        if isinstance(player_input, str):
-            key = player_input.upper()
+        self.message = ''
 
-            if key in Keys.__members__:
-                player_input = Keys[key]
-            else:
-                # Неверная клавиша — просто возвращаем состояние
-                return self.get_game_state()
-
-        # --------------------------
-        # 2. Получаем координаты
-        # --------------------------
         old_x, old_y = self.character.get_cords()
         new_x, new_y = old_x, old_y
 
-        # --------------------------
-        # 3. Движение — только по Enum Keys
-        # --------------------------
+
         if player_input == Keys.W_UP:
             new_y -= 1
         elif player_input == Keys.S_DOWN:
@@ -122,10 +121,19 @@ class GameController:
             new_x -= 1
         elif player_input == Keys.D_RIGHT:
             new_x += 1
+        elif player_input in Keys.H_USE_WEAPON.value:
+            self.backpack.get_items('weapon')
+        elif player_input in Keys.J_USE_FOOD.value:
+            self.backpack.get_items('food')
+        elif player_input in Keys.K_USE_ELIXIR.value:
+            self.backpack.get_items('potion')
+        elif player_input in Keys.E_USE_SCROLL.value:
+            self.backpack.get_items('scroll')
+        elif player_input == Keys.Q_CLOSE:
+            self.backpack.current_item_list = []
+        elif 48 <= int(player_input) <= 57:
+            self.message += self.backpack.use_item(player_input - 48,self.character)
 
-        # --------------------------
-        # 4. Защита от выхода за карту
-        # --------------------------
         max_y = len(self.game_map.tiles) - 1
         max_x = len(self.game_map.tiles[0]) - 1
 
@@ -139,11 +147,17 @@ class GameController:
         target_tile = self.game_map.tiles[new_y][new_x]
 
         if target_tile in ('.', ',', '@'):  # '.' — пол, ',' — коридор
-            # очищаем старую позицию
             self.game_map.tiles[old_y][old_x] = '.'
-            # ставим игрока на новую
             self.character.set_cords(new_x, new_y)
             self.game_map.tiles[new_y][new_x] = '@'
+
+        for i, item in enumerate(self.items):
+            if item.get_cords() == (new_x, new_y):
+                self.message = self.backpack.add_item(self.items.pop(i))
+                self.game_map.tiles[old_y][old_x] = '.'
+                self.character.set_cords(new_x, new_y)
+                self.game_map.tiles[new_y][new_x] = '@'
+                break
 
         # --------------------------
         # 6. Двигаем врагов
@@ -159,23 +173,20 @@ class GameController:
         # --------------------------
         # 7. Обрабатываем бои
         # --------------------------
-        self.message = ''
+        #
         for battle in self.battles:
             if battle is None:
                 continue
-
             self.message += battle.player_action((new_x, new_y))
             if self.check_monster_alive(battle.monster):
                 self.message += battle.attack()
             else:
                 self.character.update_level()
 
-        # --------------------------
-        # 8. Логирование карты
-        # --------------------------
-        with open('map.txt', 'w') as f:
-            for tile in self.game_map.tiles:
-                f.write(str(tile) + '\n')
+
+        with open('d.log', 'w') as log:
+            log.write(f'{player_input}\n')
+
 
         return self.get_game_state()
 
@@ -185,13 +196,20 @@ class GameController:
         """
         with open('d.log', 'a') as log:
             log.write(f'Итог {[e.get_cords() for e in self.enemies]}:\n')
+        # with open('items.log', 'a') as log:
+        #     for i, itt in enumerate(self.items):
+        #         log.write(f'{i}. {itt.get_cords()}: {itt.subtype}\n')
         state = {
             "rooms": self.level[0],
             'corridors': self.level[1],
             "player": self.character.presentation_data(),
             "enemies": [e.presentation_data() for e in self.enemies],
+            "items": [i.presentation_data() for i in self.items],
+            'weapon': self.backpack.get_weapons(),
+            'food': self.backpack.get_food(),
+            'elixir': self.backpack.get_potions(),
+            'scroll': self.backpack.get_scrolls(),
             "message": self.message
-            # "hp": self.game_session.character.current_health,
         }
         return state
 
@@ -200,3 +218,5 @@ class GameController:
         Возвращает сообщение о завершении игры.
         """
         return {"game_over": True}
+
+

@@ -18,6 +18,8 @@ class MapGenerator:
             random.seed(seed)
 
     def is_walkable(self, x, y):
+        if not(0 <= x < self.width and 0 <= y < self.height):
+            return False
         return self.tiles[y][x] in (".", ",")
 
     def get_room_size(self, x, y):
@@ -33,7 +35,7 @@ class MapGenerator:
     def set_player_cords(self,):
         cords = self.rooms_ui[self.start_room]
         cord_x = random.randint(cords['x'] + 1, cords['x'] + cords['width'] - 2)
-        cord_y = random.randint(cords['y']+ 1 , cords['y'] + cords['height'] - 2)
+        cord_y = random.randint(cords['y']+ 1, cords['y'] + cords['height'] - 2)
         return cord_x, cord_y
 
     def can_set_smth(self, x, y):

@@ -124,6 +124,7 @@ class Fight:
         if new_cords == monster_cords:
             self.set_turn_player()
             message = self.attack()
+            self.player_first_attack = False
         else:
             self.turn_player = False
             if not self.player_first_attack:

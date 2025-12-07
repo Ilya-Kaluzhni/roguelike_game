@@ -13,6 +13,17 @@ class Keys(Enum):
 
     Q_CLOSE = (81, 113)
 
+    INDEX_0 = 48
+    INDEX_1 = 49
+    INDEX_2 = 50
+    INDEX_3 = 51
+    INDEX_4 = 52
+    INDEX_5 = 53
+    INDEX_6 = 54
+    INDEX_7 = 55
+    INDEX_8 = 56
+    INDEX_9 = 57
+
 
 
 class Directions(Enum):
