@@ -1,6 +1,7 @@
 # /Users/ilya/roguelike_game/src7/presentation/screen.py
 import curses
 from curses import wrapper
+from datetime import datetime
 
 from controller import Controller
 from character import Character
@@ -15,6 +16,7 @@ from player_stats import PlayerStats
 from static import Keys
 from message import MessageWindow
 from enum import Enum
+from datalayer import GameSaveManager, LeaderboardManager, StatisticsManager
 
 import locale
 locale.setlocale(locale.LC_ALL, '')
@@ -28,8 +30,9 @@ from map_generate import MapGenerator
 
 class MenuId(Enum):
     NEW_GAME = 1
-    OLD_GAME = 2
-    EXIT = 3
+    CONTINUE_GAME = 2
+    LEADERBOARD = 3
+    EXIT = 4
 
 
 def create_data_windows(stdscr):
@@ -65,25 +68,78 @@ def create_data_windows(stdscr):
 
     return win_message, win_rules, win_game, win_backpack, win_stats
 
-def main(stdscr):
-    # сюда добавить цикл
+def show_leaderboard(stdscr, stats_manager):
+    """Показывает таблицу лидеров"""
+    leaderboard_manager = LeaderboardManager(stats_manager)
+    
+    curses.curs_set(1)
+    while True:
+        stdscr.clear()
+        stdscr.addstr(0, 0, "=== ТАБЛИЦА ЛИДЕРОВ ===\n\n", curses.A_BOLD)
+        
+        leaderboard = leaderboard_manager.get_leaderboard_by_level(limit=10)
+        stdscr.addstr(f"{'Ранг':<5} {'Уровень':<10} {'Золото':<10} {'Дата':<20}\n")
+        stdscr.addstr('-' * 50 + '\n')
+        
+        for rank, attempt in enumerate(leaderboard, 1):
+            date = datetime.fromisoformat(attempt['timestamp']).strftime('%Y-%m-%d %H:%M')
+            line = f'{rank:<5} {attempt["level_reached"]:<10} {attempt["gold"]:<10} {date:<20}\n'
+            stdscr.addstr(line)
+        
+        stdscr.addstr('\nНажмите ESC для выхода\n')
+        stdscr.refresh()
+        
+        key = stdscr.getch()
+        if key == 0x1B:  # Esc
+            break
     curses.curs_set(0)
+
+def main(stdscr):
+    curses.curs_set(0)
+    save_manager = GameSaveManager()
+    stats_manager = StatisticsManager()
+    
     start_screen = StartScreen(stdscr)
-    next_step = start_screen.screen()
-
-    if next_step == MenuId.EXIT.value:
-        return # будет break
-
+    
+    # Используем существующий метод screen()
+    menu_result = start_screen.screen()
+    
+    if menu_result == 3:  # EXIT
+        return
+    elif menu_result == 1:  # NEW_GAME
+        menu_result = MenuId.NEW_GAME.value
+    elif menu_result == 2:  # OLD_GAME — проверяем наличие сохранения
+        if save_manager.has_save():
+            menu_result = MenuId.CONTINUE_GAME.value
+        else:
+            menu_result = MenuId.NEW_GAME.value
+    
+    if menu_result == MenuId.EXIT.value:
+        return
+    
     win_message, win_rules, win_game, win_backpack, win_stats = create_data_windows(stdscr)
 
     controller = Controller()
-    data = controller.get_input_give_update(0)
+    
+    # Если продолжаем игру — загружаем сохранённое состояние
+    if menu_result == MenuId.CONTINUE_GAME.value and save_manager.has_save():
+        save_data = save_manager.load_game()
+        if save_data:
+            # Загружаем состояние в контроллер
+            controller.back.load_from_save(save_data)
+            # Получаем актуальное состояние после загрузки
+            data = controller.get_input_give_update(0)
+        else:
+            # Если ошибка загрузки — начинаем заново
+            data = controller.get_input_give_update(0)
+    else:
+        # Новая игра
+        data = controller.get_input_give_update(0)
 
     # создаём карту
     game_map = GameMap()
     game_map.add_rooms(data['rooms'])
     game_map.add_corridors(data['corridors'])
-    # game_map.place_items()                    # ← размещаем предметы
 
     # игровые данные
     player_pos   = data['player']['cords']
@@ -96,11 +152,12 @@ def main(stdscr):
 
     current_level = data.get('level', 1)
 
-    if next_step == MenuId.NEW_GAME.value:
-        win_rules.draw_controls()
+    if menu_result in [MenuId.NEW_GAME.value, MenuId.CONTINUE_GAME.value]:
+        if menu_result == MenuId.NEW_GAME.value:
+            win_rules.draw_controls()
+        
         win_backpack.show_panel()
         win_stats.draw_stats(player_stats)
-
         win_game.update(player_pos, monsters, items)
         curses.doupdate()
 
@@ -120,17 +177,14 @@ def main(stdscr):
 
             # если уровень сменился — пересобираем GameMap и перенастраиваем win_game
             if data.get('level_changed'):
-                # создаём новый объект карты и добавляем комнаты/коридоры
                 game_map = GameMap()
                 game_map.add_rooms(data['rooms'])
                 game_map.add_corridors(data['corridors'])
-                # инициализируем видимость для нового уровня
                 game_map.update_visibility(player_pos[0], player_pos[1])
-                # повторно настраиваем объекты рендера с новой картой и позициями
                 win_game.setup_game_objects(game_map, player_pos, monsters, items)
                 current_level = data.get('level', current_level)
+                win_rules.draw_controls()
             else:
-                # ВСЕГДА обновляем предметы динамически
                 win_game.update(player_pos, monsters, items)
 
             if key == 0x1B:      # Esc
@@ -143,22 +197,18 @@ def main(stdscr):
             if key in Keys.Q_CLOSE.value:
                 win_backpack.show_panel()
                 win_rules.clear()
-
             elif key in Keys.W_UP.value:
                 win_game.set_direction('up')
                 win_game.update(player_pos, monsters, items)
                 win_rules.press_btn(key)
-
             elif key in Keys.A_LEFT.value:
                 win_game.set_direction('left')
                 win_game.update(player_pos, monsters, items)
                 win_rules.press_btn(key)
-
             elif key in Keys.S_DOWN.value:
                 win_game.set_direction('down')
                 win_game.update(player_pos, monsters, items)
                 win_rules.press_btn(key)
-
             elif key in Keys.D_RIGHT.value:
                 win_game.set_direction('right')
                 win_game.update(player_pos, monsters, items)
@@ -166,27 +216,16 @@ def main(stdscr):
 
             # инвентарь
             elif key in Keys.H_USE_WEAPON.value:
-                current_item_type = 'weapon'
                 win_backpack.show_current_items('weapon', data['weapon'])
-                #win_backpack.show_current_items('weapon', weapons)
                 win_rules.clear()
-
             elif key in Keys.J_USE_FOOD.value:
-                current_item_type = 'food'
                 win_backpack.show_current_items('food', data['food'])
-                #win_backpack.show_current_items('food', foods)
                 win_rules.clear()
-
             elif key in Keys.K_USE_ELIXIR.value:
-                current_item_type = 'elixir'
                 win_backpack.show_current_items('elixir', data['elixir'])
-                #win_backpack.show_current_items('elixir', elixirs)
                 win_rules.clear()
-
             elif key in Keys.E_USE_SCROLL.value:
-                current_item_type = 'scroll'
                 win_backpack.show_current_items('scroll', data['scroll'])
-                #win_backpack.show_current_items('scroll', scrolls)
                 win_rules.clear()
             elif key in Keys.P_GO_3D.value:
                 win_game.go_tride()
@@ -194,11 +233,9 @@ def main(stdscr):
 
             if ord('0') <= key <= ord('9'):
                 win_backpack.show_panel()
+            
             win_stats.draw_stats(player_stats)
             curses.doupdate()
-
-    elif next_step == MenuId.OLD_GAME.value:
-        pass
 
 
 wrapper(main)

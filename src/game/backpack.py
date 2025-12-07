@@ -57,16 +57,20 @@ class Backpack:
 
     def use_item(self, index, character):
         items_list = self.current_item_list
-        with open('items.log', "a") as f:
-            f.write(str(*self.current_item_list))
+        
         if not items_list:
             return ""
 
         if index < 0 or index >= len(items_list):
             return "Неверный индекс"
 
-        item = items_list.pop(index)
+        item = items_list[index]
         result = item.apply_to_character(character)
+        
+        # Удаляем предмет из рюкзака
+        if item in self.items.get(self.current_type, []):
+            self.items[self.current_type].remove(item)
+        
         self.current_item_list = []
         return f"Использован {item.subtype}: {result}"
 

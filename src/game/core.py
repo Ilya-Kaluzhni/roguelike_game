@@ -15,6 +15,9 @@ from enemy_movement import MoveEnemy
 from random import randint, choice
 from fight import Fight
 from items import Item
+from datalayer import GameSaveManager, StatisticsManager
+import time
+from typing import Dict
 
 
 class GameController:
@@ -33,7 +36,14 @@ class GameController:
         self.battles = []
         self.level = None
         self.n_level = 1
-        self.level_changed = False  # флаг смены уровня
+        self.level_changed = False
+        
+        # Инициализируем слой данных
+        self.save_manager = GameSaveManager()
+        self.stats_manager = StatisticsManager()
+        self.start_time = time.time()
+        self.enemies_defeated = 0
+        
         self.load_level()
 
     def start(self):
@@ -102,6 +112,7 @@ class GameController:
                 self.game_map.tiles[cor_y][cor_x] = '.'
                 self.enemies.pop(i)
                 self.battles.pop(i)
+                self.enemies_defeated += 1  # увеличиваем счетчик
                 return False
         return True
 
@@ -111,7 +122,6 @@ class GameController:
 
         old_x, old_y = self.character.get_cords()
         new_x, new_y = old_x, old_y
-
 
         if player_input == Keys.W_UP:
             new_y -= 1
@@ -131,8 +141,19 @@ class GameController:
             self.backpack.get_items('scroll')
         elif player_input == Keys.Q_CLOSE:
             self.backpack.current_item_list = []
-        elif 48 <= int(player_input) <= 57:
-            self.message += self.backpack.use_item(player_input - 48,self.character)
+        # Обработка номеров 0-9 для использования предметов
+        elif isinstance(player_input, int) and 48 <= player_input <= 57:
+            index = player_input - 48
+            msg = self.backpack.use_item(index, self.character)
+            if msg:
+                self.message += msg
+            return self.get_game_state()
+        elif isinstance(player_input, str) and player_input.isdigit():
+            index = int(player_input)
+            msg = self.backpack.use_item(index, self.character)
+            if msg:
+                self.message += msg
+            return self.get_game_state()
 
         max_y = len(self.game_map.tiles) - 1
         max_x = len(self.game_map.tiles[0]) - 1
@@ -147,12 +168,15 @@ class GameController:
             self.n_level += 1
             if self.n_level > 21:
                 self.message = 'Поздравляю! Вы прошли игру.'
+                self._save_attempt(game_won=True)
                 return self.get_game_over_state()
             else:
                 # генерируем следующий уровень (сохранённый рюкзак и характеристики персонажа остаются)
                 self.load_level()
                 self.level_changed = True
                 self.message = f'Вы перешли на уровень {self.n_level}'
+                # сохраняем прогресс после каждого уровня
+                self._auto_save()
                 return self.get_game_state()
 
         if target_tile in ('.', ',', '@'):  # '.' — пол, ',' — коридор
@@ -225,10 +249,133 @@ class GameController:
         }
         return state
 
+    def load_from_save(self, save_data: Dict) -> bool:
+        """Загружает состояние игры из сохранённых данных"""
+        try:
+            self.n_level = save_data.get('level', 1)
+            
+            # Восстанавливаем характеристики персонажа
+            player_data = save_data.get('player', {})
+            self.character.health = player_data.get('health', 40)
+            self.character.max_health = player_data.get('max_health', 40)
+            self.character.strength = player_data.get('strength', 15)
+            self.character.dexterity = player_data.get('dexterity', 6)
+            self.character.regen_limit = player_data.get('regen_limit', 40)
+            
+            # Восстанавливаем золото в рюкзаке
+            self.backpack.treasure = player_data.get('gold', 0)
+            
+            # Восстанавливаем предметы рюкзака
+            backpack_data = save_data.get('backpack', {})
+            if backpack_data:
+                # Очищаем рюкзак
+                self.backpack.items = {
+                    "food": [],
+                    "potion": [],
+                    "scroll": [],
+                    "weapon": []
+                }
+                
+                # Восстанавливаем оружие
+                for weapon_data in backpack_data.get('weapon', []):
+                    weapon = Item(
+                        item_type=weapon_data.get('item_type', 'weapon'),
+                        subtype=weapon_data.get('subtype', 'оружие'),
+                        letter=weapon_data.get('letter', 'w'),
+                        health=weapon_data.get('health', 0),
+                        max_health=weapon_data.get('max_health', 0),
+                        dexterity=weapon_data.get('dexterity', 0),
+                        strength=weapon_data.get('strength', 0),
+                        value=weapon_data.get('value', 0)
+                    )
+                    self.backpack.items['weapon'].append(weapon)
+                
+                # Восстанавливаем еду
+                for food_data in backpack_data.get('food', []):
+                    food = Item(
+                        item_type=food_data.get('item_type', 'food'),
+                        subtype=food_data.get('subtype', 'еда'),
+                        letter=food_data.get('letter', 'f'),
+                        health=food_data.get('health', 0),
+                        max_health=food_data.get('max_health', 0),
+                        dexterity=food_data.get('dexterity', 0),
+                        strength=food_data.get('strength', 0),
+                        value=food_data.get('value', 0)
+                    )
+                    self.backpack.items['food'].append(food)
+                
+                # Восстанавливаем зелья
+                for potion_data in backpack_data.get('potion', []):
+                    potion = Item(
+                        item_type=potion_data.get('item_type', 'potion'),
+                        subtype=potion_data.get('subtype', 'зелье'),
+                        letter=potion_data.get('letter', 'e'),
+                        health=potion_data.get('health', 0),
+                        max_health=potion_data.get('max_health', 0),
+                        dexterity=potion_data.get('dexterity', 0),
+                        strength=potion_data.get('strength', 0),
+                        value=potion_data.get('value', 0)
+                    )
+                    self.backpack.items['potion'].append(potion)
+                
+                # Восстанавливаем свитки
+                for scroll_data in backpack_data.get('scroll', []):
+                    scroll = Item(
+                        item_type=scroll_data.get('item_type', 'scroll'),
+                        subtype=scroll_data.get('subtype', 'свиток'),
+                        letter=scroll_data.get('letter', 't'),
+                        health=scroll_data.get('health', 0),
+                        max_health=scroll_data.get('max_health', 0),
+                        dexterity=scroll_data.get('dexterity', 0),
+                        strength=scroll_data.get('strength', 0),
+                        value=scroll_data.get('value', 0)
+                    )
+                    self.backpack.items['scroll'].append(scroll)
+            
+            # Восстанавливаем врагов и предметы
+            self.enemies = []
+            self.items = []
+            
+            # Генерируем уровень заново, но с восстановленным n_level
+            self.load_level()
+            
+            return True
+        except Exception as e:
+            print(f'Ошибка при загрузке сохранения: {e}')
+            return False
+
+    def _auto_save(self):
+        """Автосохранение после прохождения уровня"""
+        game_state = self.get_game_state()
+        # Передаём рюкзак и персонажа для полного сохранения
+        self.save_manager.save_game(game_state, self.backpack, self.character)
+        print(f'Игра сохранена (уровень {self.n_level})')
+
+    def _save_attempt(self, game_won: bool = False):
+        """Сохраняет статистику попытки"""
+        play_time = int(time.time() - self.start_time)
+        attempt_data = {
+            'level_reached': self.n_level,
+            'max_health': self.character.max_health,
+            'health': self.character.health,
+            'strength': self.character.strength,
+            'dexterity': self.character.dexterity,
+            'gold': self.backpack.treasure,
+            'enemies_defeated': self.enemies_defeated,
+            'game_won': game_won,
+            'play_time': play_time
+        }
+        self.stats_manager.add_attempt(attempt_data)
+
     def get_game_over_state(self):
         """
         Возвращает сообщение о завершении игры.
         """
-        return {"game_over": True}
+        return {
+            "game_over": True,
+            "level": self.n_level,
+            "gold": self.backpack.treasure,
+            "enemies_defeated": self.enemies_defeated
+        }
 
 

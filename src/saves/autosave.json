@@ -1,0 +1,317 @@
+{
+  "timestamp": "2025-12-07T17:11:24.206504",
+  "level": 3,
+  "player": {
+    "health": -187.5,
+    "max_health": 40,
+    "strength": 15,
+    "dexterity": 6,
+    "regen_limit": 40,
+    "x": 24,
+    "y": 6,
+    "cords": [
+      24,
+      6
+    ],
+    "level": 1,
+    "gold": 163
+  },
+  "backpack": {
+    "weapon": [
+      {
+        "subtype": "кинжал",
+        "item_type": "weapon",
+        "letter": "w",
+        "health": 0,
+        "max_health": 0,
+        "dexterity": 0,
+        "strength": 1,
+        "value": 0
+      }
+    ],
+    "food": [],
+    "potion": [
+      {
+        "subtype": "зелье лечения",
+        "item_type": "potion",
+        "letter": "e",
+        "health": 15,
+        "max_health": 0,
+        "dexterity": 0,
+        "strength": 0,
+        "value": 0
+      },
+      {
+        "subtype": "зелье лечения",
+        "item_type": "potion",
+        "letter": "e",
+        "health": 15,
+        "max_health": 0,
+        "dexterity": 0,
+        "strength": 0,
+        "value": 0
+      },
+      {
+        "subtype": "зелье лечения",
+        "item_type": "potion",
+        "letter": "e",
+        "health": 15,
+        "max_health": 0,
+        "dexterity": 0,
+        "strength": 0,
+        "value": 0
+      }
+    ],
+    "scroll": [],
+    "treasure": 163
+  },
+  "enemies": [
+    {
+      "type": "O",
+      "color": "yellow",
+      "x": 38,
+      "y": 22
+    },
+    {
+      "type": "f",
+      "color": "white",
+      "x": 40,
+      "y": 22
+    },
+    {
+      "type": "e",
+      "color": "white",
+      "x": 40,
+      "y": 13
+    },
+    {
+      "type": "s",
+      "color": "white",
+      "x": 8,
+      "y": 4
+    },
+    {
+      "type": "e",
+      "color": "white",
+      "x": 29,
+      "y": 22
+    }
+  ],
+  "items": [
+    {
+      "type": "e",
+      "x": 24,
+      "y": 14
+    },
+    {
+      "type": "f",
+      "x": 22,
+      "y": 13
+    },
+    {
+      "type": "f",
+      "x": 36,
+      "y": 14
+    },
+    {
+      "type": "t",
+      "x": 42,
+      "y": 15
+    },
+    {
+      "type": "w",
+      "x": 22,
+      "y": 16
+    },
+    {
+      "type": "w",
+      "x": 27,
+      "y": 13
+    },
+    {
+      "type": "f",
+      "x": 37,
+      "y": 6
+    },
+    {
+      "type": "f",
+      "x": 7,
+      "y": 6
+    },
+    {
+      "type": "w",
+      "x": 38,
+      "y": 14
+    },
+    {
+      "type": "t",
+      "x": 28,
+      "y": 13
+    },
+    {
+      "type": "t",
+      "x": 41,
+      "y": 5
+    },
+    {
+      "type": "t",
+      "x": 23,
+      "y": 14
+    },
+    {
+      "type": "f",
+      "x": 29,
+      "y": 17
+    },
+    {
+      "type": "t",
+      "x": 38,
+      "y": 7
+    },
+    {
+      "type": "w",
+      "x": 7,
+      "y": 6
+    },
+    {
+      "type": "f",
+      "x": 40,
+      "y": 14
+    }
+  ],
+  "rooms": [
+    {
+      "x": 5,
+      "y": 3,
+      "width": 8,
+      "height": 6
+    },
+    {
+      "x": 20,
+      "y": 3,
+      "width": 10,
+      "height": 6
+    },
+    {
+      "x": 35,
+      "y": 3,
+      "width": 9,
+      "height": 6
+    },
+    {
+      "x": 5,
+      "y": 12,
+      "width": 7,
+      "height": 7
+    },
+    {
+      "x": 20,
+      "y": 12,
+      "width": 11,
+      "height": 7
+    },
+    {
+      "x": 35,
+      "y": 12,
+      "width": 9,
+      "height": 7
+    },
+    {
+      "x": 5,
+      "y": 21,
+      "width": 7,
+      "height": 3,
+      "exit": [
+        7,
+        22
+      ]
+    },
+    {
+      "x": 20,
+      "y": 21,
+      "width": 11,
+      "height": 3
+    },
+    {
+      "x": 35,
+      "y": 21,
+      "width": 9,
+      "height": 3
+    }
+  ],
+  "corridors": [
+    {
+      "x": 12,
+      "y": 5,
+      "width": 8,
+      "height": 2
+    },
+    {
+      "x": 29,
+      "y": 5,
+      "width": 6,
+      "height": 2
+    },
+    {
+      "x": 11,
+      "y": 14,
+      "width": 9,
+      "height": 2
+    },
+    {
+      "x": 30,
+      "y": 14,
+      "width": 5,
+      "height": 2
+    },
+    {
+      "x": 11,
+      "y": 21,
+      "width": 9,
+      "height": 2
+    },
+    {
+      "x": 30,
+      "y": 21,
+      "width": 5,
+      "height": 2
+    },
+    {
+      "x": 8,
+      "y": 8,
+      "width": 3,
+      "height": 4
+    },
+    {
+      "x": 7,
+      "y": 18,
+      "width": 3,
+      "height": 3
+    },
+    {
+      "x": 24,
+      "y": 8,
+      "width": 3,
+      "height": 4
+    },
+    {
+      "x": 24,
+      "y": 18,
+      "width": 3,
+      "height": 3
+    },
+    {
+      "x": 38,
+      "y": 8,
+      "width": 3,
+      "height": 4
+    },
+    {
+      "x": 38,
+      "y": 18,
+      "width": 3,
+      "height": 3
+    }
+  ],
+  "message": "Вы перешли на уровень 3"
+}
