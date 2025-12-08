@@ -153,9 +153,8 @@ def main(stdscr):
     current_level = data.get('level', 1)
 
     if menu_result in [MenuId.NEW_GAME.value, MenuId.CONTINUE_GAME.value]:
-        if menu_result == MenuId.NEW_GAME.value:
-            win_rules.draw_controls()
-        
+        # Инициализируем UI для обоих случаев (новая игра и загрузка)
+        win_rules.draw_controls()
         win_backpack.show_panel()
         win_stats.draw_stats(player_stats)
         win_game.update(player_pos, monsters, items)
@@ -184,6 +183,7 @@ def main(stdscr):
                 win_game.setup_game_objects(game_map, player_pos, monsters, items)
                 current_level = data.get('level', current_level)
                 win_rules.draw_controls()
+                win_backpack.show_panel()
             else:
                 win_game.update(player_pos, monsters, items)
 

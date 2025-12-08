@@ -13,7 +13,7 @@ class GameSaveManager:
             os.makedirs(save_dir)
         self.current_save_path = os.path.join(save_dir, 'autosave.json')
     
-    def save_game(self, game_state: Dict, backpack=None, character=None) -> bool:
+    def save_game(self, game_state: Dict, backpack=None, character=None, game_map=None) -> bool:
         """Сохраняет текущее состояние игры в файл"""
         try:
             # Сохраняем предметы рюкзака как JSON-совместимые данные
@@ -91,6 +91,11 @@ class GameSaveManager:
                     'gold': backpack.treasure if backpack else 0
                 }
             
+            # Сохраняем состояние исследованных клеток
+            explored_data = []
+            if game_map:
+                explored_data = game_map.explored
+            
             save_data = {
                 'timestamp': datetime.now().isoformat(),
                 'level': game_state.get('level', 1),
@@ -100,6 +105,7 @@ class GameSaveManager:
                 'items': game_state.get('items', []),
                 'rooms': game_state.get('rooms', []),
                 'corridors': game_state.get('corridors', []),
+                'explored': explored_data,
                 'message': game_state.get('message', '')
             }
             

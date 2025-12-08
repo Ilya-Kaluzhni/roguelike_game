@@ -223,6 +223,13 @@ class GameController:
 
         return self.get_game_state()
 
+    def _auto_save(self):
+        """Автосохранение после прохождения уровня"""
+        game_state = self.get_game_state()
+        # Передаём рюкзак и персонажа для полного сохранения
+        self.save_manager.save_game(game_state, self.backpack, self.character)
+        print(f'Игра сохранена (уровень {self.n_level})')
+
     def get_game_state(self):
         """
         Возвращает текущее состояние игры: карту, координаты игрока, врагов и здоровье.
@@ -230,7 +237,6 @@ class GameController:
         with open('d.log', 'a') as log:
             log.write(f'Итог {[e.get_cords() for e in self.enemies]}:\n')
         player_data = self.character.presentation_data()
-        # добавляем номер уровня в данные игрока, чтобы UI всегда мог его показать
         player_data['level'] = self.n_level
 
         state = {
@@ -343,13 +349,6 @@ class GameController:
         except Exception as e:
             print(f'Ошибка при загрузке сохранения: {e}')
             return False
-
-    def _auto_save(self):
-        """Автосохранение после прохождения уровня"""
-        game_state = self.get_game_state()
-        # Передаём рюкзак и персонажа для полного сохранения
-        self.save_manager.save_game(game_state, self.backpack, self.character)
-        print(f'Игра сохранена (уровень {self.n_level})')
 
     def _save_attempt(self, game_won: bool = False):
         """Сохраняет статистику попытки"""

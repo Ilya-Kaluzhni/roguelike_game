@@ -206,3 +206,12 @@ class GameMap:
     def remove_item(self, x, y):
         if (x, y) in self.items_on_map:
             del self.items_on_map[(x, y)]
+
+    def get_explored_state(self):
+        """Возвращает состояние исследованных клеток"""
+        return self.explored
+
+    def set_explored_state(self, explored_state):
+        """Устанавливает состояние исследованных клеток"""
+        if explored_state and len(explored_state) == self.height and len(explored_state[0]) == self.width:
+            self.explored = explored_state
